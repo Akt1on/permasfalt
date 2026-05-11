@@ -40,35 +40,41 @@ export function Hero() {
         </motion.div>
 
         <h1
-          className="font-display tracking-wide leading-[0.95] text-foreground max-w-5xl"
-          style={{ fontSize: "clamp(2.5rem, 9vw, 8rem)" }}
+          className="font-display tracking-[0.01em] leading-[0.95] text-foreground max-w-5xl break-words hyphens-none"
+          style={{ fontSize: "clamp(2rem, 11vw, 8rem)" }}
         >
           {TITLE.split(" ").map((word, wi) => (
-            <span key={wi} className="inline-block mr-[0.18em] whitespace-nowrap">
-              {word.split("").map((ch, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 40, rotateX: -90 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{
-                    delay: 0.4 + (wi * 0.18 + i * 0.04),
-                    duration: 0.6,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="inline-block"
-                >
-                  {ch}
-                </motion.span>
-              ))}
-            </span>
+            <motion.span
+              key={wi}
+              initial={{ opacity: 0, y: "0.4em", filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{
+                delay: 0.35 + wi * 0.18,
+                duration: 0.9,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="inline-block mr-[0.22em] last:mr-0"
+            >
+              {word === "АСФАЛЬТИРОВАНИЕ" ? (
+                <span className="bg-gradient-gold bg-clip-text text-transparent">{word}</span>
+              ) : (
+                word
+              )}
+            </motion.span>
           ))}
+          <motion.span
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 1.0, duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
+            className="block mt-4 h-[3px] w-24 sm:w-32 origin-left bg-gradient-gold rounded-full"
+          />
         </h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4 }}
-          className="mt-6 max-w-xl text-base md:text-lg text-muted-foreground"
+          transition={{ delay: 1.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-6 max-w-xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed"
         >
           Профессиональная укладка асфальта, тротуарной плитки и благоустройство
           территорий. Своя техника. Бесплатный выезд и замер.
