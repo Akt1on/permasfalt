@@ -56,7 +56,7 @@ export function Hero() {
               className="inline-block mr-[0.22em] last:mr-0"
             >
               {word === "АСФАЛЬТИРОВАНИЕ" ? (
-                <span className="bg-gradient-gold bg-clip-text text-transparent">{word}</span>
+                <span className="text-gradient-gold">{word}</span>
               ) : (
                 word
               )}
