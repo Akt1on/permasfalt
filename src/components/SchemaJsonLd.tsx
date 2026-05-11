@@ -1,3 +1,5 @@
+import { SITE } from "@/data/site";
+
 /**
  * Render JSON-LD schema(s) inline. Use one per page.
  */
@@ -5,13 +7,10 @@ export function SchemaJsonLd({ data }: { data: unknown }) {
   return (
     <script
       type="application/ld+json"
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />
   );
 }
-
-import { SITE } from "@/data/site";
 
 export const localBusinessSchema = {
   "@context": "https://schema.org",
