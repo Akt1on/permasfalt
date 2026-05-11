@@ -10,12 +10,50 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UslugiRouteImport } from './routes/uslugi'
+import { Route as PolitikaKonfidencialnostiRouteImport } from './routes/politika-konfidencialnosti'
+import { Route as OtzyvyRouteImport } from './routes/otzyvy'
+import { Route as ObektyRouteImport } from './routes/obekty'
+import { Route as ONasRouteImport } from './routes/o-nas'
+import { Route as KontaktyRouteImport } from './routes/kontakty'
+import { Route as CenyRouteImport } from './routes/ceny'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UslugiIndexRouteImport } from './routes/uslugi.index'
+import { Route as UslugiSlugRouteImport } from './routes/uslugi.$slug'
 
 const UslugiRoute = UslugiRouteImport.update({
   id: '/uslugi',
   path: '/uslugi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PolitikaKonfidencialnostiRoute =
+  PolitikaKonfidencialnostiRouteImport.update({
+    id: '/politika-konfidencialnosti',
+    path: '/politika-konfidencialnosti',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OtzyvyRoute = OtzyvyRouteImport.update({
+  id: '/otzyvy',
+  path: '/otzyvy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObektyRoute = ObektyRouteImport.update({
+  id: '/obekty',
+  path: '/obekty',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ONasRoute = ONasRouteImport.update({
+  id: '/o-nas',
+  path: '/o-nas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KontaktyRoute = KontaktyRouteImport.update({
+  id: '/kontakty',
+  path: '/kontakty',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CenyRoute = CenyRouteImport.update({
+  id: '/ceny',
+  path: '/ceny',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,32 +66,94 @@ const UslugiIndexRoute = UslugiIndexRouteImport.update({
   path: '/',
   getParentRoute: () => UslugiRoute,
 } as any)
+const UslugiSlugRoute = UslugiSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => UslugiRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ceny': typeof CenyRoute
+  '/kontakty': typeof KontaktyRoute
+  '/o-nas': typeof ONasRoute
+  '/obekty': typeof ObektyRoute
+  '/otzyvy': typeof OtzyvyRoute
+  '/politika-konfidencialnosti': typeof PolitikaKonfidencialnostiRoute
   '/uslugi': typeof UslugiRouteWithChildren
+  '/uslugi/$slug': typeof UslugiSlugRoute
   '/uslugi/': typeof UslugiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ceny': typeof CenyRoute
+  '/kontakty': typeof KontaktyRoute
+  '/o-nas': typeof ONasRoute
+  '/obekty': typeof ObektyRoute
+  '/otzyvy': typeof OtzyvyRoute
+  '/politika-konfidencialnosti': typeof PolitikaKonfidencialnostiRoute
+  '/uslugi/$slug': typeof UslugiSlugRoute
   '/uslugi': typeof UslugiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ceny': typeof CenyRoute
+  '/kontakty': typeof KontaktyRoute
+  '/o-nas': typeof ONasRoute
+  '/obekty': typeof ObektyRoute
+  '/otzyvy': typeof OtzyvyRoute
+  '/politika-konfidencialnosti': typeof PolitikaKonfidencialnostiRoute
   '/uslugi': typeof UslugiRouteWithChildren
+  '/uslugi/$slug': typeof UslugiSlugRoute
   '/uslugi/': typeof UslugiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/uslugi' | '/uslugi/'
+  fullPaths:
+    | '/'
+    | '/ceny'
+    | '/kontakty'
+    | '/o-nas'
+    | '/obekty'
+    | '/otzyvy'
+    | '/politika-konfidencialnosti'
+    | '/uslugi'
+    | '/uslugi/$slug'
+    | '/uslugi/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/uslugi'
-  id: '__root__' | '/' | '/uslugi' | '/uslugi/'
+  to:
+    | '/'
+    | '/ceny'
+    | '/kontakty'
+    | '/o-nas'
+    | '/obekty'
+    | '/otzyvy'
+    | '/politika-konfidencialnosti'
+    | '/uslugi/$slug'
+    | '/uslugi'
+  id:
+    | '__root__'
+    | '/'
+    | '/ceny'
+    | '/kontakty'
+    | '/o-nas'
+    | '/obekty'
+    | '/otzyvy'
+    | '/politika-konfidencialnosti'
+    | '/uslugi'
+    | '/uslugi/$slug'
+    | '/uslugi/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CenyRoute: typeof CenyRoute
+  KontaktyRoute: typeof KontaktyRoute
+  ONasRoute: typeof ONasRoute
+  ObektyRoute: typeof ObektyRoute
+  OtzyvyRoute: typeof OtzyvyRoute
+  PolitikaKonfidencialnostiRoute: typeof PolitikaKonfidencialnostiRoute
   UslugiRoute: typeof UslugiRouteWithChildren
 }
 
@@ -64,6 +164,48 @@ declare module '@tanstack/react-router' {
       path: '/uslugi'
       fullPath: '/uslugi'
       preLoaderRoute: typeof UslugiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politika-konfidencialnosti': {
+      id: '/politika-konfidencialnosti'
+      path: '/politika-konfidencialnosti'
+      fullPath: '/politika-konfidencialnosti'
+      preLoaderRoute: typeof PolitikaKonfidencialnostiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otzyvy': {
+      id: '/otzyvy'
+      path: '/otzyvy'
+      fullPath: '/otzyvy'
+      preLoaderRoute: typeof OtzyvyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/obekty': {
+      id: '/obekty'
+      path: '/obekty'
+      fullPath: '/obekty'
+      preLoaderRoute: typeof ObektyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/o-nas': {
+      id: '/o-nas'
+      path: '/o-nas'
+      fullPath: '/o-nas'
+      preLoaderRoute: typeof ONasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kontakty': {
+      id: '/kontakty'
+      path: '/kontakty'
+      fullPath: '/kontakty'
+      preLoaderRoute: typeof KontaktyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ceny': {
+      id: '/ceny'
+      path: '/ceny'
+      fullPath: '/ceny'
+      preLoaderRoute: typeof CenyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -80,14 +222,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UslugiIndexRouteImport
       parentRoute: typeof UslugiRoute
     }
+    '/uslugi/$slug': {
+      id: '/uslugi/$slug'
+      path: '/$slug'
+      fullPath: '/uslugi/$slug'
+      preLoaderRoute: typeof UslugiSlugRouteImport
+      parentRoute: typeof UslugiRoute
+    }
   }
 }
 
 interface UslugiRouteChildren {
+  UslugiSlugRoute: typeof UslugiSlugRoute
   UslugiIndexRoute: typeof UslugiIndexRoute
 }
 
 const UslugiRouteChildren: UslugiRouteChildren = {
+  UslugiSlugRoute: UslugiSlugRoute,
   UslugiIndexRoute: UslugiIndexRoute,
 }
 
@@ -96,6 +247,12 @@ const UslugiRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CenyRoute: CenyRoute,
+  KontaktyRoute: KontaktyRoute,
+  ONasRoute: ONasRoute,
+  ObektyRoute: ObektyRoute,
+  OtzyvyRoute: OtzyvyRoute,
+  PolitikaKonfidencialnostiRoute: PolitikaKonfidencialnostiRoute,
   UslugiRoute: UslugiRouteWithChildren,
 }
 export const routeTree = rootRouteImport
