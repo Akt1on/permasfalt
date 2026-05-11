@@ -40,6 +40,7 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   return (
     <SiteLayout>
+      <SchemaJsonLd data={localBusinessSchema} />
       <Hero />
       <CalculatorSection />
       <ServicesGrid />
