@@ -3,6 +3,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { FloatingContactButton } from "./FloatingContactButton";
 import { CookieBanner } from "./CookieBanner";
+import { MobileCallBar } from "./MobileCallBar";
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 pt-20">{children}</main>
       <Footer />
       <FloatingContactButton />
+      <MobileCallBar />
       <CookieBanner />
     </div>
   );
