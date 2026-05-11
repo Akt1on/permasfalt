@@ -14,7 +14,7 @@ export function FloatingContactButton() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 flex flex-col-reverse items-start gap-3">
+    <div className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-40 flex flex-col-reverse items-start gap-3">
       <button
         aria-label="Связаться"
         onClick={() => setOpen((v) => !v)}
