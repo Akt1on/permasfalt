@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { Hero } from "@/components/sections/Hero";
+import { TrustStrip } from "@/components/sections/TrustStrip";
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { ServicesGrid } from "@/components/sections/ServicesGrid";
 import { WhyUs } from "@/components/sections/WhyUs";
@@ -43,6 +44,7 @@ function HomePage() {
     <SiteLayout>
       <SchemaJsonLd data={localBusinessSchema} />
       <Hero />
+      <TrustStrip />
       <CalculatorSection />
       <ServicesGrid />
       <WhyUs />
