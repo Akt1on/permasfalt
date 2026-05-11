@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { CTASection } from "@/components/sections/CTASection";
 import { ServiceCard } from "@/components/ServiceCard";
 import { FadeInUp, SectionTitle } from "@/components/ui-blocks";
-import { getService, SERVICES } from "@/data/services";
+import { getService, SERVICES, type Service } from "@/data/services";
 import { PRICE_CATEGORIES } from "@/data/prices";
 import {
   Accordion,
