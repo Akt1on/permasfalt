@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { CheckCircle2 } from "lucide-react";
+import { SchemaJsonLd } from "@/components/SchemaJsonLd";
+import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/uslugi/$slug")({
   loader: ({ params }) => {
