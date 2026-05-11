@@ -51,7 +51,7 @@ export const Route = createFileRoute("/uslugi/$slug")({
 });
 
 function ServicePage() {
-  const { service } = Route.useLoaderData();
+  const { service } = Route.useLoaderData() as { service: Service };
   const others = SERVICES.filter((s) => s.slug !== service.slug).slice(0, 4);
 
   // Build a small price list relevant to the service when possible.
