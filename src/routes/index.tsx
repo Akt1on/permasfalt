@@ -9,6 +9,7 @@ import { GallerySection } from "@/components/sections/GallerySection";
 import { ReviewsSection } from "@/components/sections/ReviewsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { MapSection } from "@/components/sections/MapSection";
+import { SchemaJsonLd, localBusinessSchema } from "@/components/SchemaJsonLd";
 import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/")({
