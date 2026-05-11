@@ -39,9 +39,12 @@ export function Hero() {
           с {SITE.yearFounded} года · Гарантия 3 года
         </motion.div>
 
-        <h1 className="font-display text-[14vw] sm:text-7xl md:text-8xl lg:text-9xl tracking-wide leading-[0.95] text-foreground max-w-5xl">
+        <h1
+          className="font-display tracking-wide leading-[0.95] text-foreground max-w-5xl"
+          style={{ fontSize: "clamp(2.5rem, 9vw, 8rem)" }}
+        >
           {TITLE.split(" ").map((word, wi) => (
-            <span key={wi} className="inline-block mr-[0.2em]">
+            <span key={wi} className="inline-block mr-[0.18em] whitespace-nowrap">
               {word.split("").map((ch, i) => (
                 <motion.span
                   key={i}
@@ -98,7 +101,7 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.9 }}
-          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10"
+          className="mt-12 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 md:gap-10 max-w-3xl"
         >
           {[
             { v: 15, s: "+", l: "лет на рынке" },
@@ -107,10 +110,10 @@ export function Hero() {
             { v: 0, s: " ₽", l: "выезд и замер" },
           ].map((stat) => (
             <div key={stat.l}>
-              <div className="font-display text-4xl md:text-5xl text-[var(--gold)] tracking-wide">
+              <div className="font-display text-3xl sm:text-4xl md:text-5xl text-[var(--gold)] tracking-wide leading-none">
                 <Counter to={stat.v} suffix={stat.s} />
               </div>
-              <div className="mt-1 text-xs md:text-sm uppercase tracking-wider text-muted-foreground">
+              <div className="mt-1.5 text-[10px] md:text-sm uppercase tracking-wider text-muted-foreground">
                 {stat.l}
               </div>
             </div>
