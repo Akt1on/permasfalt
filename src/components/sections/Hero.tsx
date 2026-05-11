@@ -46,8 +46,8 @@ export function Hero() {
           {TITLE.split(" ").map((word, wi) => (
             <motion.span
               key={wi}
-              initial={{ opacity: 0, y: "0.4em", filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              initial={{ opacity: 0, y: "0.5em" }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{
                 delay: 0.35 + wi * 0.18,
                 duration: 0.9,
