@@ -35,8 +35,8 @@ export function Hero() {
           transition={{ delay: 0.3 }}
           className="inline-flex items-center gap-2 mb-6 self-start text-xs uppercase tracking-[0.3em] text-[var(--gold)]"
         >
-          <span className="h-2 w-2 rounded-full bg-[var(--gold)] animate-pulse" />
-          с {SITE.yearFounded} года · Гарантия 3 года
+          <span className="h-2 w-2 rounded-full bg-[var(--gold)] animate-pulse" />с{" "}
+          {SITE.yearFounded} года · Гарантия 3 года
         </motion.div>
 
         <h1 className="max-w-5xl break-words hyphens-none font-display leading-[0.92] text-foreground sm:leading-[0.95]">
@@ -73,8 +73,8 @@ export function Hero() {
           transition={{ delay: 1.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="mt-6 max-w-xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed"
         >
-          Профессиональная укладка асфальта, тротуарной плитки и благоустройство
-          территорий. Своя техника. Бесплатный выезд и замер.
+          Профессиональная укладка асфальта, тротуарной плитки и благоустройство территорий. Своя
+          техника. Бесплатный выезд и замер.
         </motion.p>
 
         <motion.div
