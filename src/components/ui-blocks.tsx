@@ -74,7 +74,10 @@ export function SectionTitle({
           {eyebrow}
         </div>
       )}
-      <h2 className="font-display text-4xl md:text-5xl lg:text-6xl tracking-wide text-foreground">
+      <h2
+        className="font-display tracking-wide text-foreground leading-[1] break-words"
+        style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)" }}
+      >
         {title}
       </h2>
       {description && (

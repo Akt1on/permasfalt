@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { Hero } from "@/components/sections/Hero";
+import { TrustStrip } from "@/components/sections/TrustStrip";
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { ServicesGrid } from "@/components/sections/ServicesGrid";
 import { WhyUs } from "@/components/sections/WhyUs";
@@ -9,6 +10,7 @@ import { GallerySection } from "@/components/sections/GallerySection";
 import { ReviewsSection } from "@/components/sections/ReviewsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { MapSection } from "@/components/sections/MapSection";
+import { SchemaJsonLd, localBusinessSchema } from "@/components/SchemaJsonLd";
 import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/")({
@@ -40,7 +42,9 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   return (
     <SiteLayout>
+      <SchemaJsonLd data={localBusinessSchema} />
       <Hero />
+      <TrustStrip />
       <CalculatorSection />
       <ServicesGrid />
       <WhyUs />

@@ -44,7 +44,10 @@ export function PageHeader({
               {eyebrow}
             </div>
           )}
-          <h1 className="font-display text-5xl md:text-7xl tracking-wide leading-[0.95] max-w-4xl">
+          <h1
+            className="font-display tracking-wide leading-[0.95] max-w-4xl break-words"
+            style={{ fontSize: "clamp(2.25rem, 7vw, 5.5rem)" }}
+          >
             {title}
           </h1>
           {description && (

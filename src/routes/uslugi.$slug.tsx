@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { CheckCircle2 } from "lucide-react";
+import { SchemaJsonLd } from "@/components/SchemaJsonLd";
+import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/uslugi/$slug")({
   loader: ({ params }) => {
@@ -63,6 +65,27 @@ function ServicePage() {
 
   return (
     <SiteLayout>
+      <SchemaJsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: `${service.title} в Перми`,
+          description: service.hero,
+          provider: { "@type": "LocalBusiness", name: SITE.name, telephone: SITE.phoneRaw },
+          areaServed: ["Пермь", "Пермский край"],
+        }}
+      />
+      <SchemaJsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: service.faq.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }}
+      />
       <PageHeader
         breadcrumbs={[{ label: "Услуги", to: "/uslugi" }, { label: service.title }]}
         eyebrow={service.priceFrom}

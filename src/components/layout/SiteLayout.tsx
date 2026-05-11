@@ -3,14 +3,16 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { FloatingContactButton } from "./FloatingContactButton";
 import { CookieBanner } from "./CookieBanner";
+import { MobileCallBar } from "./MobileCallBar";
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground pb-14 md:pb-0">
       <Header />
       <main className="flex-1 pt-20">{children}</main>
       <Footer />
       <FloatingContactButton />
+      <MobileCallBar />
       <CookieBanner />
     </div>
   );
