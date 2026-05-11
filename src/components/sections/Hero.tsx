@@ -5,7 +5,7 @@ import heroImg from "@/assets/hero-asphalt.jpg";
 import { SITE } from "@/data/site";
 import { Counter } from "@/components/ui-blocks";
 
-const TITLE = "АСФАЛЬТИРОВАНИЕ В ПЕРМИ";
+const TITLE_WORDS = ["АСФАЛЬТИРОВАНИЕ", "В", "ПЕРМИ"];
 
 export function Hero() {
   return (
@@ -39,11 +39,8 @@ export function Hero() {
           с {SITE.yearFounded} года · Гарантия 3 года
         </motion.div>
 
-        <h1
-          className="font-display tracking-[0.01em] leading-[0.95] text-foreground max-w-5xl break-words hyphens-none"
-          style={{ fontSize: "clamp(2rem, 11vw, 8rem)" }}
-        >
-          {TITLE.split(" ").map((word, wi) => (
+        <h1 className="max-w-5xl break-words hyphens-none font-display leading-[0.92] text-foreground sm:leading-[0.95]">
+          {TITLE_WORDS.map((word, wi) => (
             <motion.span
               key={wi}
               initial={{ opacity: 0, y: "0.5em" }}
@@ -53,13 +50,13 @@ export function Hero() {
                 duration: 0.9,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="inline-block mr-[0.22em] last:mr-0"
+              className={
+                word === "АСФАЛЬТИРОВАНИЕ"
+                  ? "mb-1 block max-w-full text-[clamp(2rem,9.2vw,8rem)] tracking-[0.02em] text-[var(--gold)] [text-shadow:0_2px_0_var(--background),0_0_28px_color-mix(in_oklch,var(--gold)_42%,transparent)] sm:mb-0 sm:inline-block sm:mr-[0.22em] sm:text-[clamp(2.8rem,10.5vw,8rem)]"
+                  : "inline-block mr-[0.2em] text-[clamp(2.55rem,14vw,8rem)] tracking-[0.01em] last:mr-0 sm:mr-[0.22em] sm:text-[clamp(2.8rem,10.5vw,8rem)]"
+              }
             >
-              {word === "АСФАЛЬТИРОВАНИЕ" ? (
-                <span className="text-gradient-gold">{word}</span>
-              ) : (
-                word
-              )}
+              {word}
             </motion.span>
           ))}
           <motion.span
