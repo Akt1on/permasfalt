@@ -1,99 +1,133 @@
 import { motion } from "framer-motion";
-import { Phone, Calculator } from "lucide-react";
+import { Phone, Calculator, ChevronDown, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import heroImg from "@/assets/hero-asphalt.jpg";
 import { SITE } from "@/data/site";
 import { Counter } from "@/components/ui-blocks";
+import { NeuralCanvas } from "@/components/NeuralCanvas";
 
-const TITLE_WORDS = ["АСФАЛЬТИРОВАНИЕ", "В", "ПЕРМИ"];
+const TITLE_LINES = [
+  ["АСФАЛЬТИРОВАНИЕ"],
+  ["В", "ПЕРМИ"],
+];
 
 export function Hero() {
   return (
-    <section className="relative min-h-[100svh] overflow-hidden grain">
-      {/* Background image with parallax-ish ken burns */}
+    <section className="relative min-h-[100svh] overflow-hidden grain bg-[#08080a]">
+      {/* Background image */}
       <motion.div
-        initial={{ scale: 1.15, opacity: 0 }}
+        initial={{ scale: 1.12, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 2.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 2.6, ease: [0.22, 1, 0.36, 1] }}
         className="absolute inset-0"
       >
         <img
           src={heroImg}
-          alt="Асфальтоукладчик за работой"
-          className="h-full w-full object-cover"
+          alt="Укладка асфальта в Перми ночью"
+          className="h-full w-full object-cover object-center opacity-70"
           width={1920}
           height={1080}
+          fetchPriority="high"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
+        {/* Cinematic gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
+        <div className="absolute inset-0 bg-radial-gold opacity-60" />
       </motion.div>
 
-      <div className="relative container-x flex flex-col justify-center min-h-[100svh] pt-28 pb-20 md:pb-12">
+      {/* AI neural-network canvas overlay */}
+      <NeuralCanvas className="opacity-50 mix-blend-screen" />
+
+      {/* Subtle vignette */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%)",
+        }}
+      />
+
+      <div className="relative container-x flex flex-col justify-center min-h-[100svh] pt-28 pb-24 md:pb-16">
+        {/* AI badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="inline-flex items-center gap-2 mb-6 self-start text-xs uppercase tracking-[0.3em] text-[var(--gold)]"
+          transition={{ delay: 0.2, duration: 0.7 }}
+          className="inline-flex items-center gap-2.5 mb-7 self-start glass rounded-full px-4 py-2 text-[11px] sm:text-xs uppercase tracking-[0.28em]"
         >
-          <span className="h-2 w-2 rounded-full bg-[var(--gold)] animate-pulse" />с{" "}
-          {SITE.yearFounded} года · Гарантия 3 года
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          <Sparkles className="h-3.5 w-3.5 text-[var(--gold)]" />
+          <span className="text-foreground/90">AI-powered estimate</span>
+          <span className="hidden sm:inline text-foreground/40">·</span>
+          <span className="hidden sm:inline text-muted-foreground">с {SITE.yearFounded}</span>
         </motion.div>
 
-        <h1 className="max-w-5xl break-words hyphens-none font-display leading-[0.92] text-foreground sm:leading-[0.95]">
-          {TITLE_WORDS.map((word, wi) => (
-            <motion.span
-              key={wi}
-              initial={{ opacity: 0, y: "0.5em" }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: 0.35 + wi * 0.18,
-                duration: 0.9,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className={
-                word === "АСФАЛЬТИРОВАНИЕ"
-                  ? "mb-1 block max-w-full text-[clamp(2rem,9.2vw,8rem)] tracking-[0.02em] text-[var(--gold)] [text-shadow:0_2px_0_var(--background),0_0_28px_color-mix(in_oklch,var(--gold)_42%,transparent)] sm:mb-0 sm:inline-block sm:mr-[0.22em] sm:text-[clamp(2.8rem,10.5vw,8rem)]"
-                  : "inline-block mr-[0.2em] text-[clamp(2.55rem,14vw,8rem)] tracking-[0.01em] last:mr-0 sm:mr-[0.22em] sm:text-[clamp(2.8rem,10.5vw,8rem)]"
-              }
-            >
-              {word}
-            </motion.span>
-          ))}
+        {/* Title rendered line-by-line so АСФАЛЬТИРОВАНИЕ never wraps mid-word */}
+        <h1 className="max-w-5xl font-display leading-[0.88] tracking-[0.02em]">
+          {TITLE_LINES.map((words, li) =>
+            words.map((word, wi) => {
+              const i = li * 10 + wi;
+              const isAsphalt = word === "АСФАЛЬТИРОВАНИЕ";
+              return (
+                <motion.span
+                  key={`${li}-${wi}`}
+                  initial={{ opacity: 0, y: "0.4em" }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.35 + i * 0.12,
+                    duration: 0.85,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className={
+                    isAsphalt
+                      ? "block text-[clamp(2rem,9vw,7.5rem)] text-[var(--gold)] [text-shadow:0_2px_0_rgba(0,0,0,0.4),0_0_42px_color-mix(in_oklch,var(--gold)_45%,transparent)]"
+                      : "inline-block mr-[0.22em] last:mr-0 text-[clamp(2.6rem,12vw,7.5rem)] text-foreground"
+                  }
+                >
+                  {word}
+                </motion.span>
+              );
+            }),
+          )}
           <motion.span
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
-            transition={{ delay: 1.0, duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
-            className="block mt-4 h-[3px] w-24 sm:w-32 origin-left bg-gradient-gold rounded-full"
+            transition={{ delay: 1.05, duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
+            className="block mt-5 h-[3px] w-28 sm:w-36 origin-left bg-gradient-gold rounded-full"
           />
         </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-6 max-w-xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed"
+          transition={{ delay: 1.15, duration: 0.7 }}
+          className="mt-7 max-w-xl text-sm sm:text-base md:text-lg text-foreground/80 leading-relaxed"
         >
-          Профессиональная укладка асфальта, тротуарной плитки и благоустройство территорий. Своя
-          техника. Бесплатный выезд и замер.
+          Профессиональная укладка асфальта, тротуарной плитки и благоустройство территорий.
+          Своя техника. Бесплатный выезд и замер.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6 }}
-          className="mt-8 flex flex-wrap gap-3"
+          transition={{ delay: 1.4 }}
+          className="mt-9 flex flex-wrap gap-3"
         >
           <Link
             to="/kontakty"
             hash="zayavka"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-7 py-4 text-sm font-bold uppercase tracking-wider text-background shadow-gold-lg hover:-translate-y-0.5 transition-all"
+            className="group inline-flex items-center gap-2 rounded-full bg-gradient-gold px-7 py-4 text-sm font-bold uppercase tracking-wider text-background shadow-gold-lg hover:-translate-y-0.5 transition-all"
           >
             <Calculator className="h-4 w-4" />
             Получить расчёт
           </Link>
           <a
             href={`tel:${SITE.phoneRaw}`}
-            className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--gold)]/40 bg-background/40 backdrop-blur px-7 py-4 text-sm font-bold uppercase tracking-wider text-foreground hover:border-[var(--gold)] hover:bg-[var(--gold)]/10 transition-all"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--gold)]/40 bg-background/30 backdrop-blur px-7 py-4 text-sm font-bold uppercase tracking-wider text-foreground hover:border-[var(--gold)] hover:bg-[var(--gold)]/10 transition-all"
           >
             <Phone className="h-4 w-4" />
             Позвонить
@@ -103,8 +137,8 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.9 }}
-          className="mt-12 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 md:gap-10 max-w-3xl"
+          transition={{ delay: 1.7 }}
+          className="mt-14 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-7 md:gap-10 max-w-3xl"
         >
           {[
             { v: 15, s: "+", l: "лет на рынке" },
@@ -113,16 +147,34 @@ export function Hero() {
             { v: 0, s: " ₽", l: "выезд и замер" },
           ].map((stat) => (
             <div key={stat.l}>
-              <div className="font-display text-3xl sm:text-4xl md:text-5xl text-[var(--gold)] tracking-wide leading-none">
+              <div className="font-numeric text-4xl sm:text-5xl md:text-6xl text-[var(--gold)] leading-none">
                 <Counter to={stat.v} suffix={stat.s} />
               </div>
-              <div className="mt-1.5 text-[10px] md:text-sm uppercase tracking-wider text-muted-foreground">
+              <div className="mt-2 text-[10px] md:text-xs uppercase tracking-[0.22em] text-muted-foreground">
                 {stat.l}
               </div>
             </div>
           ))}
         </motion.div>
       </div>
+
+      {/* Scroll indicator */}
+      <motion.a
+        href="#next"
+        aria-label="Прокрутить вниз"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2.2, duration: 0.8 }}
+        className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex-col items-center gap-1.5 text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-[var(--gold)] transition-colors"
+      >
+        <span>scroll</span>
+        <motion.span
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ChevronDown className="h-4 w-4" />
+        </motion.span>
+      </motion.a>
     </section>
   );
 }

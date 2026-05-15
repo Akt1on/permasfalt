@@ -132,6 +132,13 @@
 @layer utilities {
   .font-display { font-family: var(--font-display); }
   .font-heading { font-family: var(--font-heading); }
+  .font-numeric { font-family: var(--font-numeric); letter-spacing: 0.02em; }
+
+  /* Hide native cursor on desktop when custom cursor is active */
+  html.custom-cursor-active,
+  html.custom-cursor-active * {
+    cursor: none !important;
+  }
 
   .text-gradient-gold {
     background: var(--gradient-gold);
