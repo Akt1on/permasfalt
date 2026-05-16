@@ -4,6 +4,7 @@ import { Footer } from "./Footer";
 import { FloatingContactButton } from "./FloatingContactButton";
 import { CookieBanner } from "./CookieBanner";
 import { CustomCursor } from "@/components/CustomCursor";
+import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (
@@ -14,7 +15,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <FloatingContactButton />
       <CookieBanner />
       <CustomCursor />
+      <ExitIntentPopup />
     </div>
   );
 }
-
