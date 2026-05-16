@@ -16,9 +16,12 @@ import { Route as ObektyRouteImport } from './routes/obekty'
 import { Route as ONasRouteImport } from './routes/o-nas'
 import { Route as KontaktyRouteImport } from './routes/kontakty'
 import { Route as CenyRouteImport } from './routes/ceny'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UslugiIndexRouteImport } from './routes/uslugi.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UslugiSlugRouteImport } from './routes/uslugi.$slug'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const UslugiRoute = UslugiRouteImport.update({
   id: '/uslugi',
@@ -56,6 +59,11 @@ const CenyRoute = CenyRouteImport.update({
   path: '/ceny',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -66,14 +74,25 @@ const UslugiIndexRoute = UslugiIndexRouteImport.update({
   path: '/',
   getParentRoute: () => UslugiRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const UslugiSlugRoute = UslugiSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => UslugiRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/ceny': typeof CenyRoute
   '/kontakty': typeof KontaktyRoute
   '/o-nas': typeof ONasRoute
@@ -81,7 +100,9 @@ export interface FileRoutesByFullPath {
   '/otzyvy': typeof OtzyvyRoute
   '/politika-konfidencialnosti': typeof PolitikaKonfidencialnostiRoute
   '/uslugi': typeof UslugiRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/uslugi/$slug': typeof UslugiSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/uslugi/': typeof UslugiIndexRoute
 }
 export interface FileRoutesByTo {
@@ -92,12 +113,15 @@ export interface FileRoutesByTo {
   '/obekty': typeof ObektyRoute
   '/otzyvy': typeof OtzyvyRoute
   '/politika-konfidencialnosti': typeof PolitikaKonfidencialnostiRoute
+  '/admin/login': typeof AdminLoginRoute
   '/uslugi/$slug': typeof UslugiSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/uslugi': typeof UslugiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/ceny': typeof CenyRoute
   '/kontakty': typeof KontaktyRoute
   '/o-nas': typeof ONasRoute
@@ -105,13 +129,16 @@ export interface FileRoutesById {
   '/otzyvy': typeof OtzyvyRoute
   '/politika-konfidencialnosti': typeof PolitikaKonfidencialnostiRoute
   '/uslugi': typeof UslugiRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/uslugi/$slug': typeof UslugiSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/uslugi/': typeof UslugiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/ceny'
     | '/kontakty'
     | '/o-nas'
@@ -119,7 +146,9 @@ export interface FileRouteTypes {
     | '/otzyvy'
     | '/politika-konfidencialnosti'
     | '/uslugi'
+    | '/admin/login'
     | '/uslugi/$slug'
+    | '/admin/'
     | '/uslugi/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,11 +159,14 @@ export interface FileRouteTypes {
     | '/obekty'
     | '/otzyvy'
     | '/politika-konfidencialnosti'
+    | '/admin/login'
     | '/uslugi/$slug'
+    | '/admin'
     | '/uslugi'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/ceny'
     | '/kontakty'
     | '/o-nas'
@@ -142,12 +174,15 @@ export interface FileRouteTypes {
     | '/otzyvy'
     | '/politika-konfidencialnosti'
     | '/uslugi'
+    | '/admin/login'
     | '/uslugi/$slug'
+    | '/admin/'
     | '/uslugi/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CenyRoute: typeof CenyRoute
   KontaktyRoute: typeof KontaktyRoute
   ONasRoute: typeof ONasRoute
@@ -208,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CenyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -222,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UslugiIndexRouteImport
       parentRoute: typeof UslugiRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/uslugi/$slug': {
       id: '/uslugi/$slug'
       path: '/$slug'
@@ -229,8 +278,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UslugiSlugRouteImport
       parentRoute: typeof UslugiRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface UslugiRouteChildren {
   UslugiSlugRoute: typeof UslugiSlugRoute
@@ -247,6 +315,7 @@ const UslugiRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   CenyRoute: CenyRoute,
   KontaktyRoute: KontaktyRoute,
   ONasRoute: ONasRoute,
@@ -258,3 +327,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
