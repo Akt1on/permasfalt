@@ -132,6 +132,12 @@ export function ContactForm({
       {errors.consent && (
         <p className="mt-1 text-xs text-destructive">{errors.consent.message}</p>
       )}
+      {submitError && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <span>{submitError}</span>
+        </div>
+      )}
 
       <motion.button
         type="submit"
