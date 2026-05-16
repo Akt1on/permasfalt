@@ -4,8 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { Loader2, CheckCircle2, Send } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, CheckCircle2, Send, AlertCircle } from "lucide-react";
 import { SERVICES } from "@/data/services";
+import { submitLead } from "@/lib/leads.functions";
 
 const schema = z.object({
   name: z.string().min(2, "Введите имя"),
@@ -28,6 +30,8 @@ export function ContactForm({
   variant?: "card" | "inline";
 }) {
   const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submit = useServerFn(submitLead);
   const {
     register,
     handleSubmit,
@@ -39,12 +43,31 @@ export function ContactForm({
   });
 
   const onSubmit = async (data: FormValues) => {
-    // Stub: integration with Lovable Cloud + Telegram bot in next iteration.
-    await new Promise((r) => setTimeout(r, 800));
-    console.log("[application]", data);
-    setSent(true);
-    reset({ consent: true as unknown as true });
-    setTimeout(() => setSent(false), 5000);
+    setSubmitError(null);
+    try {
+      const params = new URLSearchParams(
+        typeof window !== "undefined" ? window.location.search : "",
+      );
+      await submit({
+        data: {
+          name: data.name,
+          phone: data.phone,
+          service: data.service || null,
+          message: data.message || null,
+          source: typeof window !== "undefined" ? window.location.pathname : null,
+          utm_source: params.get("utm_source"),
+          utm_medium: params.get("utm_medium"),
+          utm_campaign: params.get("utm_campaign"),
+        },
+      });
+      setSent(true);
+      reset({ consent: true as unknown as true });
+      setTimeout(() => setSent(false), 6000);
+    } catch (e) {
+      setSubmitError(
+        e instanceof Error ? e.message : "Не удалось отправить заявку. Позвоните нам напрямую.",
+      );
+    }
   };
 
   const wrapperClass =
@@ -108,6 +131,12 @@ export function ContactForm({
       </label>
       {errors.consent && (
         <p className="mt-1 text-xs text-destructive">{errors.consent.message}</p>
+      )}
+      {submitError && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <span>{submitError}</span>
+        </div>
       )}
 
       <motion.button
