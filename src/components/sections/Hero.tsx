@@ -5,6 +5,7 @@ import heroImg from "@/assets/hero-asphalt.jpg";
 import { SITE } from "@/data/site";
 import { Counter } from "@/components/ui-blocks";
 import { NeuralCanvas } from "@/components/NeuralCanvas";
+import { PromoTimer } from "@/components/PromoTimer";
 
 const TITLE_LINES = [
   ["АСФАЛЬТИРОВАНИЕ"],
@@ -115,7 +116,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.4 }}
-          className="mt-9 flex flex-wrap gap-3"
+          className="mt-9 flex flex-wrap items-center gap-3"
         >
           <Link
             to="/kontakty"
@@ -132,6 +133,15 @@ export function Hero() {
             <Phone className="h-4 w-4" />
             Позвонить
           </a>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.55 }}
+          className="mt-5"
+        >
+          <PromoTimer />
         </motion.div>
 
         <motion.div
