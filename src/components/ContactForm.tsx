@@ -4,8 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { Loader2, CheckCircle2, Send } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, CheckCircle2, Send, AlertCircle } from "lucide-react";
 import { SERVICES } from "@/data/services";
+import { submitLead } from "@/lib/leads.functions";
 
 const schema = z.object({
   name: z.string().min(2, "Введите имя"),
