@@ -30,6 +30,8 @@ export function ContactForm({
   variant?: "card" | "inline";
 }) {
   const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submit = useServerFn(submitLead);
   const {
     register,
     handleSubmit,
@@ -41,12 +43,31 @@ export function ContactForm({
   });
 
   const onSubmit = async (data: FormValues) => {
-    // Stub: integration with Lovable Cloud + Telegram bot in next iteration.
-    await new Promise((r) => setTimeout(r, 800));
-    console.log("[application]", data);
-    setSent(true);
-    reset({ consent: true as unknown as true });
-    setTimeout(() => setSent(false), 5000);
+    setSubmitError(null);
+    try {
+      const params = new URLSearchParams(
+        typeof window !== "undefined" ? window.location.search : "",
+      );
+      await submit({
+        data: {
+          name: data.name,
+          phone: data.phone,
+          service: data.service || null,
+          message: data.message || null,
+          source: typeof window !== "undefined" ? window.location.pathname : null,
+          utm_source: params.get("utm_source"),
+          utm_medium: params.get("utm_medium"),
+          utm_campaign: params.get("utm_campaign"),
+        },
+      });
+      setSent(true);
+      reset({ consent: true as unknown as true });
+      setTimeout(() => setSent(false), 6000);
+    } catch (e) {
+      setSubmitError(
+        e instanceof Error ? e.message : "Не удалось отправить заявку. Позвоните нам напрямую.",
+      );
+    }
   };
 
   const wrapperClass =
