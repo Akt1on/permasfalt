@@ -1,16 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getMyAdminStatus, listLeads, updateLeadStatus } from "@/lib/admin.functions";
+import { Seo } from "@/components/Seo";
 import {
   Loader2, LogOut, Phone, MessageSquare, Clock, CheckCircle2,
   Archive, ShieldAlert, RefreshCw, Inbox, Send,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "Заявки — Админка" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: AdminPage,
 });
 
@@ -27,14 +25,41 @@ const STATUS_COLORS: Record<string, string> = {
   archived: "bg-muted/40 text-muted-foreground border-border",
 };
 
+type Lead = {
+  id: string;
+  name: string;
+  phone: string;
+  service: string | null;
+  message: string | null;
+  source: string | null;
+  status: string;
+  telegram_sent: boolean | null;
+  created_at: string;
+};
+
+async function authedFetch(path: string, init?: RequestInit) {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  const res = await fetch(path, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Request failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [authReady, setAuthReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
-  const fetchStatus = useServerFn(getMyAdminStatus);
-  const fetchLeads = useServerFn(listLeads);
-  const mutateStatus = useServerFn(updateLeadStatus);
 
   useEffect(() => {
     let mounted = true;
@@ -53,28 +78,29 @@ function AdminPage() {
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
 
-  const status = useQuery({
+  const status = useQuery<{ isAdmin: boolean; bootstrapped: boolean }>({
     queryKey: ["admin", "status"],
-    queryFn: () => fetchStatus(),
+    queryFn: () => authedFetch("/api/admin/me"),
     enabled: authReady && hasSession,
   });
 
-  const leads = useQuery({
+  const leads = useQuery<{ leads: Lead[] }>({
     queryKey: ["admin", "leads"],
-    queryFn: () => fetchLeads(),
+    queryFn: () => authedFetch("/api/admin/leads"),
     enabled: !!status.data?.isAdmin,
     refetchInterval: 15_000,
   });
 
   const updateMut = useMutation({
     mutationFn: (vars: { id: string; status: "new" | "in_progress" | "done" | "archived" }) =>
-      mutateStatus({ data: vars }),
+      authedFetch("/api/admin/leads", { method: "PATCH", body: JSON.stringify(vars) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }),
   });
 
   if (!authReady || status.isLoading) {
     return (
       <div className="min-h-screen grid place-items-center bg-background">
+        <Seo title="Заявки — Админка" noindex />
         <Loader2 className="h-6 w-6 animate-spin text-[var(--gold)]" />
       </div>
     );
@@ -83,6 +109,7 @@ function AdminPage() {
   if (status.data && !status.data.isAdmin) {
     return (
       <div className="min-h-screen grid place-items-center bg-background px-4">
+        <Seo title="Доступ запрещён" noindex />
         <div className="max-w-md text-center">
           <ShieldAlert className="mx-auto h-12 w-12 text-destructive mb-4" />
           <h1 className="font-display text-2xl tracking-wide">Доступ запрещён</h1>
@@ -108,6 +135,7 @@ function AdminPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Seo title="Заявки — Админка" noindex />
       <header className="border-b border-border bg-surface-1 sticky top-0 z-10 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div>
