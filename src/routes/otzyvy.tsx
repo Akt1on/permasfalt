@@ -4,19 +4,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { CTASection } from "@/components/sections/CTASection";
 import { FadeInUp } from "@/components/ui-blocks";
 import { REVIEWS } from "@/data/reviews";
+import { Seo } from "@/components/Seo";
 import { Star } from "lucide-react";
 
 export const Route = createFileRoute("/otzyvy")({
-  head: () => ({
-    meta: [
-      { title: "Отзывы клиентов | Пермь Асфальт 59" },
-      {
-        name: "description",
-        content:
-          "Реальные отзывы клиентов о работе компании «Пермь Асфальт 59». Средняя оценка 5.0 из 5.",
-      },
-    ],
-  }),
   component: ReviewsPage,
 });
 
@@ -27,6 +18,7 @@ function ReviewsPage() {
 
   return (
     <SiteLayout>
+      <Seo title="Отзывы клиентов | Пермь Асфальт 59" description="Реальные отзывы клиентов. Средняя оценка 5.0 из 5." />
       <PageHeader
         breadcrumbs={[{ label: "Отзывы" }]}
         eyebrow={`Средняя оценка ${avg} ★`}

@@ -4,18 +4,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { ContactForm } from "@/components/ContactForm";
 import { FadeInUp } from "@/components/ui-blocks";
 import { SITE } from "@/data/site";
+import { Seo } from "@/components/Seo";
 import { Phone, MapPin, Clock, MessageCircle, Send, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/kontakty")({
-  head: () => ({
-    meta: [
-      { title: `Контакты — ${SITE.name} в Перми | ${SITE.phone}` },
-      {
-        name: "description",
-        content: `Свяжитесь с нами: ${SITE.phone}. Адрес: ${SITE.address}. Работаем круглосуточно.`,
-      },
-    ],
-  }),
   component: ContactsPage,
 });
 
@@ -31,6 +23,7 @@ const CARDS = [
 function ContactsPage() {
   return (
     <SiteLayout>
+      <Seo title="Контакты — Пермь Асфальт 59" description="Свяжитесь с нами. Перезвоним в течение 15 минут." />
       <PageHeader
         breadcrumbs={[{ label: "Контакты" }]}
         eyebrow="Связаться"

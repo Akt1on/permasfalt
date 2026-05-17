@@ -2,20 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { SITE } from "@/data/site";
+import { Seo } from "@/components/Seo";
 
 export const Route = createFileRoute("/politika-konfidencialnosti")({
-  head: () => ({
-    meta: [
-      { title: "Политика конфиденциальности | Пермь Асфальт 59" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
   return (
     <SiteLayout>
+      <Seo title="Политика конфиденциальности | Пермь Асфальт 59" noindex />
       <PageHeader
         breadcrumbs={[{ label: "Политика конфиденциальности" }]}
         title="Политика конфиденциальности"

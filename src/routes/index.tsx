@@ -11,37 +11,20 @@ import { ReviewsSection } from "@/components/sections/ReviewsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { MapSection } from "@/components/sections/MapSection";
 import { SchemaJsonLd, localBusinessSchema } from "@/components/SchemaJsonLd";
+import { Seo } from "@/components/Seo";
 import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Асфальтирование в Перми — укладка асфальта от 300 ₽/м² | Пермь Асфальт 59" },
-      {
-        name: "description",
-        content:
-          "Профессиональное асфальтирование в Перми и Пермском крае. Гарантия 3 года. Выезд и замер бесплатно. Работаем с 2010 года. Звоните: " +
-          SITE.phone,
-      },
-      {
-        name: "keywords",
-        content:
-          "асфальтирование Пермь, укладка асфальта Пермь, ямочный ремонт Пермь, тротуарная плитка Пермь, благоустройство Пермь",
-      },
-      { property: "og:title", content: "Асфальтирование в Перми от 300 ₽/м² | Пермь Асфальт 59" },
-      { property: "og:type", content: "website" },
-      {
-        property: "og:description",
-        content: "Укладка асфальта, тротуарной плитки, благоустройство. Гарантия 3 года.",
-      },
-    ],
-  }),
   component: HomePage,
 });
 
 function HomePage() {
   return (
     <SiteLayout>
+      <Seo
+        title={`Асфальтирование в Перми — укладка асфальта от 300 ₽/м² | Пермь Асфальт 59`}
+        description={`Профессиональное асфальтирование в Перми и Пермском крае. Гарантия 3 года. Выезд и замер бесплатно. Работаем с 2010 года. Звоните: ${SITE.phone}`}
+      />
       <SchemaJsonLd data={localBusinessSchema} />
       <Hero />
       <TrustStrip />

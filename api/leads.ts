@@ -1,6 +1,6 @@
-import { createServerFn } from "@tanstack/react-start";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "./_lib/supabase-admin";
 
 const leadSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -12,6 +12,13 @@ const leadSchema = z.object({
   utm_medium: z.string().trim().max(100).optional().nullable(),
   utm_campaign: z.string().trim().max(100).optional().nullable(),
 });
+
+function escapeHtml(s: string) {
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
+}
 
 async function sendTelegram(lead: z.infer<typeof leadSchema>) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -39,35 +46,39 @@ async function sendTelegram(lead: z.infer<typeof leadSchema>) {
   }
 }
 
-function escapeHtml(s: string) {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const parsed = leadSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid input", details: parsed.error.flatten() });
+  }
+  const data = parsed.data;
+
+  const telegramSent = await sendTelegram(data);
+
+  const { data: inserted, error } = await supabaseAdmin
+    .from("leads")
+    .insert({
+      name: data.name,
+      phone: data.phone,
+      service: data.service ?? null,
+      message: data.message ?? null,
+      source: data.source ?? null,
+      utm_source: data.utm_source ?? null,
+      utm_medium: data.utm_medium ?? null,
+      utm_campaign: data.utm_campaign ?? null,
+      telegram_sent: telegramSent,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[leads] insert failed", error);
+    return res.status(500).json({ error: "Не удалось сохранить заявку. Попробуйте ещё раз." });
+  }
+
+  return res.status(200).json({ id: inserted.id, telegramSent });
 }
-
-export const submitLead = createServerFn({ method: "POST" })
-  .inputValidator((input) => leadSchema.parse(input))
-  .handler(async ({ data }) => {
-    const telegramSent = await sendTelegram(data);
-
-    const { data: inserted, error } = await supabaseAdmin
-      .from("leads")
-      .insert({
-        name: data.name,
-        phone: data.phone,
-        service: data.service ?? null,
-        message: data.message ?? null,
-        source: data.source ?? null,
-        utm_source: data.utm_source ?? null,
-        utm_medium: data.utm_medium ?? null,
-        utm_campaign: data.utm_campaign ?? null,
-        telegram_sent: telegramSent,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("[leads] insert failed", error);
-      throw new Error("Не удалось сохранить заявку. Попробуйте ещё раз.");
-    }
-
-    return { id: inserted.id, telegramSent };
-  });

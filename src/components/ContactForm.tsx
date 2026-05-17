@@ -4,11 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2, CheckCircle2, Send, AlertCircle, Phone } from "lucide-react";
 import { SERVICES } from "@/data/services";
 import { SITE } from "@/data/site";
-import { submitLead } from "@/lib/leads.functions";
 
 const schema = z.object({
   name: z.string().min(2, "Введите имя").max(100),
@@ -33,7 +31,6 @@ export function ContactForm({
 }) {
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const submit = useServerFn(submitLead);
   const {
     register,
     handleSubmit,
@@ -47,21 +44,25 @@ export function ContactForm({
   const onSubmit = async (data: FormValues) => {
     setSubmitError(null);
     try {
-      const params = new URLSearchParams(
-        typeof window !== "undefined" ? window.location.search : "",
-      );
-      await submit({
-        data: {
+      const params = new URLSearchParams(window.location.search);
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name: data.name,
           phone: data.phone,
           service: data.service || null,
           message: data.message || null,
-          source: typeof window !== "undefined" ? window.location.pathname : null,
+          source: window.location.pathname,
           utm_source: params.get("utm_source"),
           utm_medium: params.get("utm_medium"),
           utm_campaign: params.get("utm_campaign"),
-        },
+        }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Не удалось отправить заявку. Позвоните нам напрямую.");
+      }
       setSent(true);
       reset({ consent: true as unknown as true });
     } catch (e) {

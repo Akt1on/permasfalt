@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Seo } from "@/components/Seo";
 import { Loader2, LogIn, Shield, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/login")({
-  head: () => ({ meta: [{ title: "Вход в админ-панель" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: AdminLoginPage,
 });
 
@@ -42,6 +42,7 @@ function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Seo title="Вход в админ-панель" noindex />
       <div className="w-full max-w-md">
         <Link to="/" className="block text-center text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6 hover:text-[var(--gold)] transition">
           ← На сайт

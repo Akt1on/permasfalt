@@ -3,19 +3,10 @@ import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { CTASection } from "@/components/sections/CTASection";
 import { FadeInUp, Counter } from "@/components/ui-blocks";
+import { Seo } from "@/components/Seo";
 import { Award, Truck, Users, Target } from "lucide-react";
 
 export const Route = createFileRoute("/o-nas")({
-  head: () => ({
-    meta: [
-      { title: "О компании «Пермь Асфальт 59» — 15 лет на рынке Перми" },
-      {
-        name: "description",
-        content:
-          "Компания «Пермь Асфальт 59» работает с 2010 года. Своя техника, опытная бригада, более 500 сданных объектов в Перми и Пермском крае.",
-      },
-    ],
-  }),
   component: AboutPage,
 });
 
@@ -29,6 +20,7 @@ const VALUES = [
 function AboutPage() {
   return (
     <SiteLayout>
+      <Seo title="О компании «Пермь Асфальт 59» — 15 лет на рынке Перми" description="Работаем с 2010 года. Своя техника, опытная бригада, более 500 сданных объектов." />
       <PageHeader
         breadcrumbs={[{ label: "О нас" }]}
         eyebrow="О компании"
