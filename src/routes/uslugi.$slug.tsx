@@ -53,6 +53,10 @@ function ServicePage() {
 
   return (
     <SiteLayout>
+      <Seo
+        title={`${service.title} в Перми — ${service.priceFrom} | Пермь Асфальт 59`}
+        description={service.hero}
+      />
       <SchemaJsonLd
         data={{
           "@context": "https://schema.org",
