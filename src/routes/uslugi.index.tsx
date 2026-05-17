@@ -3,18 +3,9 @@ import { SiteLayout } from "@/components/layout/SiteLayout";
 import { ServicesGrid } from "@/components/sections/ServicesGrid";
 import { CTASection } from "@/components/sections/CTASection";
 import { PageHeader } from "@/components/PageHeader";
+import { Seo } from "@/components/Seo";
 
 export const Route = createFileRoute("/uslugi/")({
-  head: () => ({
-    meta: [
-      { title: "Услуги — асфальтирование и благоустройство в Перми | Пермь Асфальт 59" },
-      {
-        name: "description",
-        content:
-          "Полный комплекс услуг: асфальтирование, ямочный ремонт, тротуарная плитка, земляные работы, демонтаж, доставка материалов в Перми и крае.",
-      },
-    ],
-  }),
   component: ServicesIndex,
 });
 
