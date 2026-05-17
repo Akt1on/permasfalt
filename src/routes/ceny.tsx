@@ -6,18 +6,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { CTASection } from "@/components/sections/CTASection";
 import { PRICE_CATEGORIES } from "@/data/prices";
 import { FadeInUp } from "@/components/ui-blocks";
+import { Seo } from "@/components/Seo";
 
 export const Route = createFileRoute("/ceny")({
-  head: () => ({
-    meta: [
-      { title: "Цены — прайс-лист на асфальтирование и благоустройство | Пермь Асфальт 59" },
-      {
-        name: "description",
-        content:
-          "Полный прайс-лист: асфальтирование от 300 ₽/м², плитка от 450 ₽/м², земляные работы, доставка материалов. Прозрачные цены без скрытых платежей.",
-      },
-    ],
-  }),
   component: PricesPage,
 });
 

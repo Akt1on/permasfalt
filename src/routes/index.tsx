@@ -11,6 +11,7 @@ import { ReviewsSection } from "@/components/sections/ReviewsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { MapSection } from "@/components/sections/MapSection";
 import { SchemaJsonLd, localBusinessSchema } from "@/components/SchemaJsonLd";
+import { Seo } from "@/components/Seo";
 import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/")({
