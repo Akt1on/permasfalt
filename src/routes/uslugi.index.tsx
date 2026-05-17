@@ -12,6 +12,7 @@ export const Route = createFileRoute("/uslugi/")({
 function ServicesIndex() {
   return (
     <SiteLayout>
+      <Seo title="Услуги — асфальтирование и благоустройство в Перми | Пермь Асфальт 59" description="Полный комплекс: асфальтирование, ямочный ремонт, плитка, демонтаж, доставка материалов." />
       <PageHeader
         breadcrumbs={[{ label: "Услуги" }]}
         eyebrow="Каталог"

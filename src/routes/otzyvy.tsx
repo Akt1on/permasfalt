@@ -18,6 +18,7 @@ function ReviewsPage() {
 
   return (
     <SiteLayout>
+      <Seo title="Отзывы клиентов | Пермь Асфальт 59" description="Реальные отзывы клиентов. Средняя оценка 5.0 из 5." />
       <PageHeader
         breadcrumbs={[{ label: "Отзывы" }]}
         eyebrow={`Средняя оценка ${avg} ★`}

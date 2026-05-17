@@ -20,6 +20,7 @@ const VALUES = [
 function AboutPage() {
   return (
     <SiteLayout>
+      <Seo title="О компании «Пермь Асфальт 59» — 15 лет на рынке Перми" description="Работаем с 2010 года. Своя техника, опытная бригада, более 500 сданных объектов." />
       <PageHeader
         breadcrumbs={[{ label: "О нас" }]}
         eyebrow="О компании"

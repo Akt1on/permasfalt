@@ -11,6 +11,7 @@ export const Route = createFileRoute("/politika-konfidencialnosti")({
 function PrivacyPage() {
   return (
     <SiteLayout>
+      <Seo title="Политика конфиденциальности | Пермь Асфальт 59" noindex />
       <PageHeader
         breadcrumbs={[{ label: "Политика конфиденциальности" }]}
         title="Политика конфиденциальности"

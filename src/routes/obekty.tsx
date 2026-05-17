@@ -12,6 +12,7 @@ export const Route = createFileRoute("/obekty")({
 function ObektyPage() {
   return (
     <SiteLayout>
+      <Seo title="Выполненные объекты — портфолио работ в Перми | Пермь Асфальт 59" description="Более 500 сданных объектов: асфальтирование, плитка, демонтаж, земляные работы." />
       <PageHeader
         breadcrumbs={[{ label: "Объекты" }]}
         eyebrow="Портфолио"
