@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { CheckCircle2 } from "lucide-react";
 import { SchemaJsonLd } from "@/components/SchemaJsonLd";
+import { Seo } from "@/components/Seo";
 import { SITE } from "@/data/site";
 
 export const Route = createFileRoute("/uslugi/$slug")({
@@ -21,19 +22,6 @@ export const Route = createFileRoute("/uslugi/$slug")({
     const service = getService(params.slug);
     if (!service) throw notFound();
     return { service };
-  },
-  head: ({ loaderData }) => {
-    const s = loaderData?.service;
-    if (!s) return { meta: [{ title: "Услуга не найдена" }] };
-    return {
-      meta: [
-        { title: `${s.title} в Перми — ${s.priceFrom} | Пермь Асфальт 59` },
-        { name: "description", content: s.hero },
-        { property: "og:title", content: `${s.title} в Перми — ${s.priceFrom}` },
-        { property: "og:description", content: s.hero },
-        { property: "og:type", content: "website" },
-      ],
-    };
   },
   component: ServicePage,
   notFoundComponent: () => (
