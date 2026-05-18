@@ -3,11 +3,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MessageCircle, Send, X, MessageSquare } from "lucide-react";
 import { SITE } from "@/data/site";
 
-const ITEMS = [
+type Item = {
+  icon?: typeof Phone;
+  text?: string;
+  label: string;
+  href: string;
+  bg: string;
+};
+
+const ITEMS: Item[] = [
   { icon: Phone, label: "Позвонить", href: `tel:${SITE.phoneRaw}`, bg: "bg-[#25D366]" },
   { icon: MessageCircle, label: "WhatsApp", href: SITE.whatsapp, bg: "bg-[#25D366]" },
   { icon: Send, label: "Telegram", href: SITE.telegram, bg: "bg-[#0088CC]" },
   { icon: MessageSquare, label: "ВКонтакте", href: SITE.vk, bg: "bg-[#0077FF]" },
+  { text: "M", label: "Max", href: SITE.max, bg: "bg-[#0068FF]" },
 ];
 
 export function FloatingContactButton() {
@@ -46,7 +55,11 @@ export function FloatingContactButton() {
               exit={{ opacity: 0, y: 20, scale: 0.5, transition: { delay: (ITEMS.length - i) * 0.03 } }}
               className={`group flex items-center gap-3 ${item.bg} text-white pl-3 pr-4 py-2.5 rounded-full shadow-lg hover:scale-105 transition-transform`}
             >
-              <item.icon className="h-5 w-5" />
+              {item.icon ? (
+                <item.icon className="h-5 w-5" />
+              ) : (
+                <span className="h-5 w-5 grid place-items-center font-bold text-sm">{item.text}</span>
+              )}
               <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
             </motion.a>
           ))}
