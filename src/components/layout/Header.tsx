@@ -4,6 +4,7 @@ import { Phone, Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SITE } from "@/data/site";
 import { SERVICES } from "@/data/services";
+import { getServiceIcon, useServices, useSiteSettings } from "@/lib/content";
 
 const NAV = [
   { to: "/", label: "Главная" },
@@ -19,6 +20,11 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(false);
+
+  const servicesQuery = useServices();
+  const siteQuery = useSiteSettings();
+  const services = servicesQuery.data ?? SERVICES;
+  const site = siteQuery.data ?? SITE;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -45,7 +51,7 @@ export function Header() {
               ПЕРМЬ АСФАЛЬТ
             </div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              с {SITE.yearFounded} года
+              с {site.yearFounded} года
             </div>
           </div>
         </Link>
@@ -77,17 +83,20 @@ export function Header() {
                       className="absolute left-0 top-full pt-3 w-[420px]"
                     >
                       <div className="glass rounded-xl p-2 shadow-card grid grid-cols-2 gap-1">
-                        {SERVICES.map((s) => (
-                          <Link
-                            key={s.slug}
-                            to="/uslugi/$slug"
-                            params={{ slug: s.slug }}
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2 hover:text-[var(--gold)] transition-colors"
-                          >
-                            <s.icon className="h-4 w-4 text-[var(--gold)]" />
-                            <span className="truncate">{s.title}</span>
-                          </Link>
-                        ))}
+                        {services.map((s) => {
+                          const Icon = getServiceIcon(s.icon);
+                          return (
+                            <Link
+                              key={s.slug}
+                              to="/uslugi/$slug"
+                              params={{ slug: s.slug }}
+                              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2 hover:text-[var(--gold)] transition-colors"
+                            >
+                              <Icon className="h-4 w-4 text-[var(--gold)]" />
+                              <span className="truncate">{s.title}</span>
+                            </Link>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -108,11 +117,11 @@ export function Header() {
         </nav>
 
         <a
-          href={`tel:${SITE.phoneRaw}`}
+          href={`tel:${site.phoneRaw}`}
           className="hidden md:inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-bold text-background shadow-gold hover:shadow-gold-lg hover:-translate-y-0.5 transition-all"
         >
           <Phone className="h-4 w-4" />
-          {SITE.phone}
+          {site.phone}
         </a>
 
         <button
@@ -146,11 +155,11 @@ export function Header() {
                 </Link>
               ))}
               <a
-                href={`tel:${SITE.phoneRaw}`}
+                href={`tel:${site.phoneRaw}`}
                 className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-gold px-5 py-3 text-sm font-bold text-background"
               >
                 <Phone className="h-4 w-4" />
-                {SITE.phone}
+                {site.phone}
               </a>
             </div>
           </motion.div>

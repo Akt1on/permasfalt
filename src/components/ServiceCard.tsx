@@ -2,9 +2,10 @@ import { Link } from "@tanstack/react-router";
 import type { Service } from "@/data/services";
 import { ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { getServiceIcon } from "@/lib/content";
 
 export function ServiceCard({ service, index = 0 }: { service: Service; index?: number }) {
-  const Icon = service.icon;
+  const Icon = getServiceIcon(service.icon);
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
