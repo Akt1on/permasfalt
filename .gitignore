@@ -1,3 +1,8 @@
+# env — секретные ключи, никогда не коммитить
+.env
+.env.local
+.env.production
+
 # Logs
 logs
 *.log

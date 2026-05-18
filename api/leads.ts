@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import { supabaseAdmin } from "./_lib/supabase-admin";
 
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://permasfalt59.ru";
+
 const leadSchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(10).max(20).regex(/^[\d+\s()-]+$/),
@@ -12,6 +14,12 @@ const leadSchema = z.object({
   utm_medium: z.string().trim().max(100).optional().nullable(),
   utm_campaign: z.string().trim().max(100).optional().nullable(),
 });
+
+function setCors(res: VercelResponse) {
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
 
 function escapeHtml(s: string) {
   return s.replace(
@@ -47,6 +55,11 @@ async function sendTelegram(lead: z.infer<typeof leadSchema>) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  setCors(res);
+
+  // Preflight
+  if (req.method === "OPTIONS") return res.status(204).end();
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -57,8 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   const data = parsed.data;
 
-  const telegramSent = await sendTelegram(data);
-
+  // 1. Сначала сохраняем в БД — лид не потеряется даже если Telegram упадёт
   const { data: inserted, error } = await supabaseAdmin
     .from("leads")
     .insert({
@@ -70,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       utm_source: data.utm_source ?? null,
       utm_medium: data.utm_medium ?? null,
       utm_campaign: data.utm_campaign ?? null,
-      telegram_sent: telegramSent,
+      telegram_sent: false,
     })
     .select("id")
     .single();
@@ -78,6 +90,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (error) {
     console.error("[leads] insert failed", error);
     return res.status(500).json({ error: "Не удалось сохранить заявку. Попробуйте ещё раз." });
+  }
+
+  // 2. Потом шлём Telegram
+  const telegramSent = await sendTelegram(data);
+
+  // 3. Обновляем флаг если успешно
+  if (telegramSent) {
+    await supabaseAdmin
+      .from("leads")
+      .update({ telegram_sent: true })
+      .eq("id", inserted.id);
   }
 
   return res.status(200).json({ id: inserted.id, telegramSent });

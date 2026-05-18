@@ -3,12 +3,23 @@ import { z } from "zod";
 import { requireAdmin } from "../_lib/auth";
 import { supabaseAdmin } from "../_lib/supabase-admin";
 
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://permasfalt59.ru";
+
+function setCors(res: VercelResponse) {
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  res.setHeader("Access-Control-Allow-Methods", "GET, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+}
+
 const updateSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(["new", "in_progress", "done", "archived"]),
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).end();
+
   const { isAdmin } = await requireAdmin(req);
   if (!isAdmin) return res.status(403).json({ error: "Forbidden" });
 
