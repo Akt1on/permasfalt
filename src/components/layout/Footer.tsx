@@ -64,24 +64,18 @@ export function Footer() {
 
         <div>
           <h4 className="text-sm uppercase tracking-widest text-[var(--gold)] mb-4">Мессенджеры</h4>
-          <div className="flex gap-3">
-            <a
-              href={SITE.whatsapp}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="WhatsApp"
-              className="h-10 w-10 grid place-items-center rounded-full bg-surface-2 hover:bg-[var(--gold)] hover:text-background transition-colors"
-            >
+          <div className="flex flex-wrap gap-3">
+            <a href={SITE.whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="h-10 w-10 grid place-items-center rounded-full bg-surface-2 hover:bg-[#25D366] hover:text-white transition-colors">
               <MessageCircle className="h-4 w-4" />
             </a>
-            <a
-              href={SITE.telegram}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Telegram"
-              className="h-10 w-10 grid place-items-center rounded-full bg-surface-2 hover:bg-[var(--gold)] hover:text-background transition-colors"
-            >
+            <a href={SITE.telegram} target="_blank" rel="noreferrer" aria-label="Telegram" className="h-10 w-10 grid place-items-center rounded-full bg-surface-2 hover:bg-[#0088CC] hover:text-white transition-colors">
               <Send className="h-4 w-4" />
+            </a>
+            <a href={SITE.vk} target="_blank" rel="noreferrer" aria-label="ВКонтакте" className="h-10 w-10 grid place-items-center rounded-full bg-surface-2 hover:bg-[#0077FF] hover:text-white transition-colors font-bold text-sm">
+              VK
+            </a>
+            <a href={SITE.max} target="_blank" rel="noreferrer" aria-label="Max" className="h-10 w-10 grid place-items-center rounded-full bg-surface-2 hover:bg-[#0068FF] hover:text-white transition-colors font-bold text-sm">
+              M
             </a>
           </div>
           <div className="mt-6 text-xs text-muted-foreground space-y-1">
