@@ -149,7 +149,15 @@ export function useGalleryItems() {
   return useQuery({
     queryKey: ["content", "gallery"],
     queryFn: fetchGalleryItems,
-    placeholderData: FALLBACK_GALLERY as GalleryItem[],
+    placeholderData: FALLBACK_GALLERY.map((g, index) => ({
+      id: `fallback-${index}`,
+      src: g.src,
+      title: g.title,
+      category: g.category,
+      category_label: g.categoryLabel,
+      year: g.year,
+      order: index,
+    })) as GalleryItem[],
     staleTime: 60_000,
   });
 }
