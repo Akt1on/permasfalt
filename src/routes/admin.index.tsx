@@ -266,7 +266,7 @@ function AdminPage() {
     );
   }
 
-  const leadItems = leads.data?.leads ?? [];
+  const leadItems: Lead[] = leads.data ?? [];
   const counts = leadItems.reduce<Record<string, number>>((acc, l) => {
     acc[l.status] = (acc[l.status] ?? 0) + 1;
     return acc;
