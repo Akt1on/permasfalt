@@ -227,6 +227,15 @@ function AdminPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "site"] }),
   });
 
+  const updateMut = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      authedFetch("/api/admin/leads", {
+        method: "PATCH",
+        body: JSON.stringify({ id, status }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }),
+  });
+
   const iconKeys = Object.keys(SERVICE_ICON_MAP) as ServiceIconKey[];
   const priceGroups = useMemo(() => groupPriceItems(pricesDraft), [pricesDraft]);
 
