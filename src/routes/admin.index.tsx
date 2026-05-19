@@ -92,6 +92,8 @@ function AdminPage() {
   const [galleryDraft, setGalleryDraft] = useState<GalleryItem[]>([]);
   const [siteDraft, setSiteDraft] = useState<SiteSettings | null>(null);
 
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
@@ -100,24 +102,40 @@ function AdminPage() {
         navigate({ to: "/admin/login" });
         return;
       }
+      setUserId(data.session.user.id);
       setHasSession(true);
       setAuthReady(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/admin/login" });
+      if (!session) {
+        navigate({ to: "/admin/login" });
+      } else {
+        setUserId(session.user.id);
+      }
     });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
 
-  const status = useQuery<StatusData>({
-    queryKey: ["admin", "status"],
-    queryFn: () => authedFetch("/api/admin/me"),
-    enabled: authReady && hasSession,
+  const status = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["admin", "status", userId],
+    queryFn: async () => {
+      if (!userId) return { isAdmin: false };
+      const isAdmin = await checkIsAdmin(userId);
+      return { isAdmin };
+    },
+    enabled: authReady && hasSession && !!userId,
   });
 
-  const leads = useQuery<{ leads: Lead[] }>({
+  const leads = useQuery<Lead[]>({
     queryKey: ["admin", "leads"],
-    queryFn: () => authedFetch("/api/admin/leads"),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Lead[];
+    },
     enabled: !!status.data?.isAdmin,
     refetchInterval: 15_000,
   });
@@ -125,8 +143,8 @@ function AdminPage() {
   const servicesQuery = useQuery<AdminService[]>({
     queryKey: ["admin", "services"],
     queryFn: async () => {
-      const { services } = await authedFetch("/api/admin/services");
-      return (services as Service[]).map((service) => ({
+      const services = await fetchServices();
+      return services.map((service) => ({
         ...service,
         icon: typeof service.icon === "string" ? (service.icon as ServiceIconKey) : "construction",
       }));
@@ -137,33 +155,25 @@ function AdminPage() {
 
   const pricesQuery = useQuery<PriceItem[]>({
     queryKey: ["admin", "prices"],
-    queryFn: async () => {
-      const { items } = await authedFetch("/api/admin/prices");
-      return items as PriceItem[];
-    },
+    queryFn: fetchPriceItems,
     enabled: !!status.data?.isAdmin,
     staleTime: 60_000,
   });
 
   const galleryQuery = useQuery<GalleryItem[]>({
     queryKey: ["admin", "gallery"],
-    queryFn: async () => {
-      const { items } = await authedFetch("/api/admin/gallery");
-      return items as GalleryItem[];
-    },
+    queryFn: fetchGalleryItems,
     enabled: !!status.data?.isAdmin,
     staleTime: 60_000,
   });
 
   const siteQuery = useQuery<SiteSettings>({
     queryKey: ["admin", "site"],
-    queryFn: async () => {
-      const { settings } = await authedFetch("/api/admin/site");
-      return settings as SiteSettings;
-    },
+    queryFn: fetchSiteSettings,
     enabled: !!status.data?.isAdmin,
     staleTime: 60_000,
   });
+
   useEffect(() => {
     if (servicesQuery.data) setServicesDraft(servicesQuery.data);
   }, [servicesQuery.data]);
@@ -181,47 +191,45 @@ function AdminPage() {
   }, [siteQuery.data]);
 
   const saveServicesMut = useMutation({
-    mutationFn: (services: AdminService[]) =>
-      authedFetch("/api/admin/services", {
-        method: "PATCH",
-        body: JSON.stringify({ services }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "services"] }),
+    mutationFn: async (services: AdminService[]) =>
+      saveServicesDiff(services as unknown as Service[], (servicesQuery.data ?? []) as unknown as Service[]),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "services"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "services"] });
+    },
   });
 
   const savePricesMut = useMutation({
-    mutationFn: (items: PriceItem[]) =>
-      authedFetch("/api/admin/prices", {
-        method: "PATCH",
-        body: JSON.stringify({ items }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "prices"] }),
+    mutationFn: async (items: PriceItem[]) =>
+      savePricesDiff(items, pricesQuery.data ?? []),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "prices"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "prices"] });
+    },
   });
 
   const saveGalleryMut = useMutation({
-    mutationFn: (items: GalleryItem[]) =>
-      authedFetch("/api/admin/gallery", {
-        method: "PATCH",
-        body: JSON.stringify({ items }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "gallery"] }),
+    mutationFn: async (items: GalleryItem[]) =>
+      saveGalleryDiff(items, galleryQuery.data ?? []),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "gallery"] });
+    },
   });
 
   const saveSiteMut = useMutation({
-    mutationFn: (settings: SiteSettings) =>
-      authedFetch("/api/admin/site", {
-        method: "PATCH",
-        body: JSON.stringify({ settings }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "site"] }),
+    mutationFn: saveSiteSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "site"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "site"] });
+    },
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      authedFetch("/api/admin/leads", {
-        method: "PATCH",
-        body: JSON.stringify({ id, status }),
-      }),
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("leads").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }),
   });
 
