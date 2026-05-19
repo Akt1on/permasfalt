@@ -554,17 +554,34 @@ function AdminPage() {
                           className="mt-2 h-28 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
                         />
                       </label>
-                      <label className="block text-sm lg:col-span-2">
-                        <span className="text-sm text-muted-foreground">URL картинки</span>
-                        <input
-                          value={service.imageUrl ?? ""}
-                          onChange={(event) => {
-                            const imageUrl = event.target.value || null;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
+                      <div className="block text-sm lg:col-span-2">
+                        <span className="text-sm text-muted-foreground">Фото услуги</span>
+                        <div className="mt-2 flex flex-col sm:flex-row gap-3 sm:items-center">
+                          {service.imageUrl ? (
+                            <img src={service.imageUrl} alt="" className="h-20 w-32 rounded-xl object-cover border border-border" />
+                          ) : (
+                            <div className="h-20 w-32 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground">
+                              <ImageIcon className="h-6 w-6" />
+                            </div>
+                          )}
+                          <div className="flex-1 space-y-2">
+                            <input
+                              value={service.imageUrl ?? ""}
+                              placeholder="URL или загрузите файл"
+                              onChange={(event) => {
+                                const imageUrl = event.target.value || null;
+                                setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl } : item));
+                              }}
+                              className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
+                            />
+                            <ImageUploadButton
+                              onUploaded={(url) =>
+                                setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl: url } : item))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
