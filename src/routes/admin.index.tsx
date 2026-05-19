@@ -1,5 +1,5 @@
-﻿import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
@@ -18,6 +18,8 @@ import {
   Plus,
   Trash2,
   Save,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   groupPriceItems,
@@ -27,6 +29,16 @@ import {
   PriceItem,
   GalleryItem,
   SiteSettings,
+  fetchServices,
+  fetchPriceItems,
+  fetchGalleryItems,
+  fetchSiteSettings,
+  saveServicesDiff,
+  savePricesDiff,
+  saveGalleryDiff,
+  saveSiteSettings,
+  uploadSiteImage,
+  checkIsAdmin,
 } from "@/lib/content";
 
 export const Route = createFileRoute("/admin/")({
@@ -57,11 +69,6 @@ type AdminTab = (typeof TAB_ITEMS)[number]["value"];
 
 type AdminService = Omit<Service, "icon"> & { icon: ServiceIconKey };
 
-type StatusData = {
-  isAdmin: boolean;
-  bootstrapped: boolean;
-};
-
 type Lead = {
   id: string;
   name: string;
@@ -74,24 +81,6 @@ type Lead = {
   created_at: string;
 };
 
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${res.status}`);
-  }
-  return res.json();
-}
-
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -103,6 +92,8 @@ function AdminPage() {
   const [galleryDraft, setGalleryDraft] = useState<GalleryItem[]>([]);
   const [siteDraft, setSiteDraft] = useState<SiteSettings | null>(null);
 
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
@@ -111,24 +102,40 @@ function AdminPage() {
         navigate({ to: "/admin/login" });
         return;
       }
+      setUserId(data.session.user.id);
       setHasSession(true);
       setAuthReady(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/admin/login" });
+      if (!session) {
+        navigate({ to: "/admin/login" });
+      } else {
+        setUserId(session.user.id);
+      }
     });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
 
-  const status = useQuery<StatusData>({
-    queryKey: ["admin", "status"],
-    queryFn: () => authedFetch("/api/admin/me"),
-    enabled: authReady && hasSession,
+  const status = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["admin", "status", userId],
+    queryFn: async () => {
+      if (!userId) return { isAdmin: false };
+      const isAdmin = await checkIsAdmin(userId);
+      return { isAdmin };
+    },
+    enabled: authReady && hasSession && !!userId,
   });
 
-  const leads = useQuery<{ leads: Lead[] }>({
+  const leads = useQuery<Lead[]>({
     queryKey: ["admin", "leads"],
-    queryFn: () => authedFetch("/api/admin/leads"),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Lead[];
+    },
     enabled: !!status.data?.isAdmin,
     refetchInterval: 15_000,
   });
@@ -136,8 +143,8 @@ function AdminPage() {
   const servicesQuery = useQuery<AdminService[]>({
     queryKey: ["admin", "services"],
     queryFn: async () => {
-      const { services } = await authedFetch("/api/admin/services");
-      return (services as Service[]).map((service) => ({
+      const services = await fetchServices();
+      return services.map((service) => ({
         ...service,
         icon: typeof service.icon === "string" ? (service.icon as ServiceIconKey) : "construction",
       }));
@@ -148,33 +155,25 @@ function AdminPage() {
 
   const pricesQuery = useQuery<PriceItem[]>({
     queryKey: ["admin", "prices"],
-    queryFn: async () => {
-      const { items } = await authedFetch("/api/admin/prices");
-      return items as PriceItem[];
-    },
+    queryFn: fetchPriceItems,
     enabled: !!status.data?.isAdmin,
     staleTime: 60_000,
   });
 
   const galleryQuery = useQuery<GalleryItem[]>({
     queryKey: ["admin", "gallery"],
-    queryFn: async () => {
-      const { items } = await authedFetch("/api/admin/gallery");
-      return items as GalleryItem[];
-    },
+    queryFn: fetchGalleryItems,
     enabled: !!status.data?.isAdmin,
     staleTime: 60_000,
   });
 
   const siteQuery = useQuery<SiteSettings>({
     queryKey: ["admin", "site"],
-    queryFn: async () => {
-      const { settings } = await authedFetch("/api/admin/site");
-      return settings as SiteSettings;
-    },
+    queryFn: fetchSiteSettings,
     enabled: !!status.data?.isAdmin,
     staleTime: 60_000,
   });
+
   useEffect(() => {
     if (servicesQuery.data) setServicesDraft(servicesQuery.data);
   }, [servicesQuery.data]);
@@ -192,47 +191,45 @@ function AdminPage() {
   }, [siteQuery.data]);
 
   const saveServicesMut = useMutation({
-    mutationFn: (services: AdminService[]) =>
-      authedFetch("/api/admin/services", {
-        method: "PATCH",
-        body: JSON.stringify({ services }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "services"] }),
+    mutationFn: async (services: AdminService[]) =>
+      saveServicesDiff(services as unknown as Service[], (servicesQuery.data ?? []) as unknown as Service[]),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "services"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "services"] });
+    },
   });
 
   const savePricesMut = useMutation({
-    mutationFn: (items: PriceItem[]) =>
-      authedFetch("/api/admin/prices", {
-        method: "PATCH",
-        body: JSON.stringify({ items }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "prices"] }),
+    mutationFn: async (items: PriceItem[]) =>
+      savePricesDiff(items, pricesQuery.data ?? []),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "prices"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "prices"] });
+    },
   });
 
   const saveGalleryMut = useMutation({
-    mutationFn: (items: GalleryItem[]) =>
-      authedFetch("/api/admin/gallery", {
-        method: "PATCH",
-        body: JSON.stringify({ items }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "gallery"] }),
+    mutationFn: async (items: GalleryItem[]) =>
+      saveGalleryDiff(items, galleryQuery.data ?? []),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "gallery"] });
+    },
   });
 
   const saveSiteMut = useMutation({
-    mutationFn: (settings: SiteSettings) =>
-      authedFetch("/api/admin/site", {
-        method: "PATCH",
-        body: JSON.stringify({ settings }),
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "site"] }),
+    mutationFn: saveSiteSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "site"] });
+      queryClient.invalidateQueries({ queryKey: ["content", "site"] });
+    },
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      authedFetch("/api/admin/leads", {
-        method: "PATCH",
-        body: JSON.stringify({ id, status }),
-      }),
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("leads").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }),
   });
 
@@ -269,7 +266,7 @@ function AdminPage() {
     );
   }
 
-  const leadItems = leads.data?.leads ?? [];
+  const leadItems: Lead[] = leads.data ?? [];
   const counts = leadItems.reduce<Record<string, number>>((acc, l) => {
     acc[l.status] = (acc[l.status] ?? 0) + 1;
     return acc;
@@ -557,17 +554,34 @@ function AdminPage() {
                           className="mt-2 h-28 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
                         />
                       </label>
-                      <label className="block text-sm lg:col-span-2">
-                        <span className="text-sm text-muted-foreground">URL картинки</span>
-                        <input
-                          value={service.imageUrl ?? ""}
-                          onChange={(event) => {
-                            const imageUrl = event.target.value || null;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
+                      <div className="block text-sm lg:col-span-2">
+                        <span className="text-sm text-muted-foreground">Фото услуги</span>
+                        <div className="mt-2 flex flex-col sm:flex-row gap-3 sm:items-center">
+                          {service.imageUrl ? (
+                            <img src={service.imageUrl} alt="" className="h-20 w-32 rounded-xl object-cover border border-border" />
+                          ) : (
+                            <div className="h-20 w-32 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground">
+                              <ImageIcon className="h-6 w-6" />
+                            </div>
+                          )}
+                          <div className="flex-1 space-y-2">
+                            <input
+                              value={service.imageUrl ?? ""}
+                              placeholder="URL или загрузите файл"
+                              onChange={(event) => {
+                                const imageUrl = event.target.value || null;
+                                setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl } : item));
+                              }}
+                              className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
+                            />
+                            <ImageUploadButton
+                              onUploaded={(url) =>
+                                setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl: url } : item))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -780,17 +794,34 @@ function AdminPage() {
                       </button>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">URL изображения</span>
-                        <input
-                          value={item.src}
-                          onChange={(event) => {
-                            const src = event.target.value;
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
+                      <div className="block text-sm md:col-span-2 xl:col-span-3">
+                        <span className="text-sm text-muted-foreground">Фото</span>
+                        <div className="mt-2 flex flex-col sm:flex-row gap-3 sm:items-center">
+                          {item.src ? (
+                            <img src={item.src} alt="" className="h-20 w-32 rounded-xl object-cover border border-border" />
+                          ) : (
+                            <div className="h-20 w-32 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground">
+                              <ImageIcon className="h-6 w-6" />
+                            </div>
+                          )}
+                          <div className="flex-1 space-y-2">
+                            <input
+                              value={item.src}
+                              placeholder="URL или загрузите файл"
+                              onChange={(event) => {
+                                const src = event.target.value;
+                                setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src } : row));
+                              }}
+                              className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
+                            />
+                            <ImageUploadButton
+                              onUploaded={(url) =>
+                                setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src: url } : row))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <label className="block text-sm">
                         <span className="text-sm text-muted-foreground">Название</span>
                         <input
@@ -998,6 +1029,51 @@ function AdminPage() {
           <div className="mt-6 rounded-2xl border border-[var(--gold)] bg-[var(--gold)]/10 px-4 py-3 text-sm text-[var(--gold)]">Сохранение...</div>
         ) : null}
       </main>
+    </div>
+  );
+}
+
+function ImageUploadButton({ onUploaded }: { onUploaded: (url: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = async (file: File) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const url = await uploadSiteImage(file);
+      onUploaded(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка загрузки");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-medium hover:bg-muted/30 disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+        {busy ? "Загрузка..." : "Загрузить фото"}
+      </button>
+      {error ? <span className="text-xs text-rose-400">{error}</span> : null}
     </div>
   );
 }

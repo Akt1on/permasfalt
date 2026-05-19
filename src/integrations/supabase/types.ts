@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      gallery_items: {
+        Row: {
+          category: string
+          category_label: string
+          created_at: string
+          id: string
+          position: number
+          src: string
+          title: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          category: string
+          category_label: string
+          created_at?: string
+          id?: string
+          position?: number
+          src: string
+          title: string
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          category?: string
+          category_label?: string
+          created_at?: string
+          id?: string
+          position?: number
+          src?: string
+          title?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string
@@ -59,6 +95,108 @@ export type Database = {
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+        }
+        Relationships: []
+      }
+      price_items: {
+        Row: {
+          category_id: string
+          category_title: string
+          created_at: string
+          id: string
+          name: string
+          position: number
+          price: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          category_title: string
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          price: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          category_title?: string
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          price?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string
+          faq: Json
+          hero: string
+          icon: string
+          id: string
+          image_url: string | null
+          includes: Json
+          position: number
+          price_from: string
+          short: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          faq?: Json
+          hero?: string
+          icon?: string
+          id?: string
+          image_url?: string | null
+          includes?: Json
+          position?: number
+          price_from?: string
+          short?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          faq?: Json
+          hero?: string
+          icon?: string
+          id?: string
+          image_url?: string | null
+          includes?: Json
+          position?: number
+          price_from?: string
+          short?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          data: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          data: Json
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
