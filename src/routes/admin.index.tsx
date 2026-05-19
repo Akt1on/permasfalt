@@ -794,17 +794,34 @@ function AdminPage() {
                       </button>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">URL изображения</span>
-                        <input
-                          value={item.src}
-                          onChange={(event) => {
-                            const src = event.target.value;
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
+                      <div className="block text-sm md:col-span-2 xl:col-span-3">
+                        <span className="text-sm text-muted-foreground">Фото</span>
+                        <div className="mt-2 flex flex-col sm:flex-row gap-3 sm:items-center">
+                          {item.src ? (
+                            <img src={item.src} alt="" className="h-20 w-32 rounded-xl object-cover border border-border" />
+                          ) : (
+                            <div className="h-20 w-32 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground">
+                              <ImageIcon className="h-6 w-6" />
+                            </div>
+                          )}
+                          <div className="flex-1 space-y-2">
+                            <input
+                              value={item.src}
+                              placeholder="URL или загрузите файл"
+                              onChange={(event) => {
+                                const src = event.target.value;
+                                setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src } : row));
+                              }}
+                              className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
+                            />
+                            <ImageUploadButton
+                              onUploaded={(url) =>
+                                setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src: url } : row))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <label className="block text-sm">
                         <span className="text-sm text-muted-foreground">Название</span>
                         <input
