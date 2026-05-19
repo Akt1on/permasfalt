@@ -1,5 +1,5 @@
-﻿import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
@@ -18,6 +18,8 @@ import {
   Plus,
   Trash2,
   Save,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   groupPriceItems,
@@ -27,6 +29,16 @@ import {
   PriceItem,
   GalleryItem,
   SiteSettings,
+  fetchServices,
+  fetchPriceItems,
+  fetchGalleryItems,
+  fetchSiteSettings,
+  saveServicesDiff,
+  savePricesDiff,
+  saveGalleryDiff,
+  saveSiteSettings,
+  uploadSiteImage,
+  checkIsAdmin,
 } from "@/lib/content";
 
 export const Route = createFileRoute("/admin/")({
@@ -57,11 +69,6 @@ type AdminTab = (typeof TAB_ITEMS)[number]["value"];
 
 type AdminService = Omit<Service, "icon"> & { icon: ServiceIconKey };
 
-type StatusData = {
-  isAdmin: boolean;
-  bootstrapped: boolean;
-};
-
 type Lead = {
   id: string;
   name: string;
@@ -73,24 +80,6 @@ type Lead = {
   telegram_sent: boolean | null;
   created_at: string;
 };
-
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${res.status}`);
-  }
-  return res.json();
-}
 
 function AdminPage() {
   const navigate = useNavigate();
