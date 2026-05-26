@@ -1,6 +1,5 @@
 
 -- Roles
-CREATE TYPE public.app_role AS ENUM ('admin','user');
 
 CREATE TABLE public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
