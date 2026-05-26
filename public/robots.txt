@@ -1,6 +1,36 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /admin/*
+Disallow: /admin/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /api/
+# Crawl-delay для вежливых ботов
+Crawl-delay: 1
+
+# Яндекс — отдельные правила
+User-agent: Yandex
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /api/
+Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content /
+Crawl-delay: 2
+
+# Googlebot
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /api/
+# Bing
+User-agent: bingbot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Crawl-delay: 2
 
 Sitemap: https://permasfalt59.ru/sitemap.xml
+Host: permasfalt59.ru

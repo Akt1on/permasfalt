@@ -1,11 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Статический fallback. Динамическая карта: /sitemap.xml -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://permasfalt59.ru/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://permasfalt59.ru/uslugi</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://permasfalt59.ru/ceny</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://permasfalt59.ru/obekty</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://permasfalt59.ru/o-nas</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://permasfalt59.ru/otzyvy</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://permasfalt59.ru/kontakty</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://permasfalt59.ru/politika-konfidencialnosti</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://permasfalt59.ru/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/tseny</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/portfolio</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/blog</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/about</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/contacts</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <!-- Города Пермского края -->
+  <url><loc>https://permasfalt59.ru/goroda/perm</loc><priority>0.95</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/krasnokamsk</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/berezniki</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/solikamsk</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/chaykovskiy</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/kungur</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/lysva</loc><priority>0.80</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/chusovoy</loc><priority>0.80</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/dobryanka</loc><priority>0.80</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/osa</loc><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/nytva</loc><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/vereshchagino</loc><priority>0.75</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/goroda/perm-rayon</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <!-- Услуги -->
+  <url><loc>https://permasfalt59.ru/services/asfaltirovanie</loc><priority>0.90</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/trotuarnaya-plitka</loc><priority>0.88</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/yamochnyy-remont</loc><priority>0.88</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/zemlyanye-raboty</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/demontazh</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/vyvoz-musora</loc><priority>0.80</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/arenda-spetstekhniki</loc><priority>0.83</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/dostavka-nerudnykh</loc><priority>0.78</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/uborka-snega</loc><priority>0.78</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/stroitelstvo-dorog</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/remont-dorog</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://permasfalt59.ru/services/kronirovanie-derevyev</loc><priority>0.70</priority><changefreq>monthly</changefreq></url>
 </urlset>
