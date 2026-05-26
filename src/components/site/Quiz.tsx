@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m as motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Calculator as CalcIcon, Sparkles } from "lucide-react";
 import { IMaskInput } from "react-imask";
 import { supabase } from "@/integrations/supabase/client";

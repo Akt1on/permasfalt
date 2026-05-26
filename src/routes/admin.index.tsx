@@ -1,1079 +1,202 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Seo } from "@/components/Seo";
 import {
-  Loader2,
-  LogOut,
-  Phone,
-  MessageSquare,
-  Clock,
-  CheckCircle2,
-  Archive,
-  ShieldAlert,
-  RefreshCw,
+  Wrench,
+  FolderKanban,
+  Star,
+  Newspaper,
   Inbox,
-  Send,
-  Plus,
-  Trash2,
-  Save,
-  Upload,
-  Image as ImageIcon,
+  Settings,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
-import {
-  groupPriceItems,
-  SERVICE_ICON_MAP,
-  Service,
-  ServiceIconKey,
-  PriceItem,
-  GalleryItem,
-  SiteSettings,
-  fetchServices,
-  fetchPriceItems,
-  fetchGalleryItems,
-  fetchSiteSettings,
-  saveServicesDiff,
-  savePricesDiff,
-  saveGalleryDiff,
-  saveSiteSettings,
-  uploadSiteImage,
-  checkIsAdmin,
-} from "@/lib/content";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
-export const Route = createFileRoute("/admin/")({
-  component: AdminPage,
-});
-
-const STATUS_LABELS: Record<string, string> = {
-  new: "Новая",
-  in_progress: "В работе",
-  done: "Готово",
-  archived: "Архив",
-};
-const STATUS_COLORS: Record<string, string> = {
-  new: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  in_progress: "bg-[var(--gold)]/15 text-[var(--gold)] border-[var(--gold)]/30",
-  done: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-  archived: "bg-muted/40 text-muted-foreground border-border",
-};
-const TAB_ITEMS = [
-  { value: "leads", label: "Заявки" },
-  { value: "services", label: "Услуги" },
-  { value: "prices", label: "Цены" },
-  { value: "gallery", label: "Галерея" },
-  { value: "site", label: "Настройки" },
-] as const;
-
-type AdminTab = (typeof TAB_ITEMS)[number]["value"];
-
-type AdminService = Omit<Service, "icon"> & { icon: ServiceIconKey };
+export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 type Lead = {
   id: string;
-  name: string;
+  name: string | null;
   phone: string;
   service: string | null;
   message: string | null;
   source: string | null;
   status: string;
-  telegram_sent: boolean | null;
   created_at: string;
 };
 
-function AdminPage() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [authReady, setAuthReady] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
-  const [tab, setTab] = useState<AdminTab>("leads");
-  const [servicesDraft, setServicesDraft] = useState<AdminService[]>([]);
-  const [pricesDraft, setPricesDraft] = useState<PriceItem[]>([]);
-  const [galleryDraft, setGalleryDraft] = useState<GalleryItem[]>([]);
-  const [siteDraft, setSiteDraft] = useState<SiteSettings | null>(null);
+const STATUS_LABELS: Record<string, string> = {
+  new:         "Новая",
+  in_progress: "В работе",
+  done:        "Завершена",
+  rejected:    "Отклонена",
+};
+const STATUS_COLORS: Record<string, string> = {
+  new:         "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+  in_progress: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
+  done:        "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+  rejected:    "bg-muted/40 text-muted-foreground border border-border",
+};
 
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      if (!data.session) {
-        navigate({ to: "/admin/login" });
-        return;
-      }
-      setUserId(data.session.user.id);
-      setHasSession(true);
-      setAuthReady(true);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) {
-        navigate({ to: "/admin/login" });
-      } else {
-        setUserId(session.user.id);
-      }
-    });
-    return () => { mounted = false; subscription.unsubscribe(); };
-  }, [navigate]);
-
-  const status = useQuery<{ isAdmin: boolean }>({
-    queryKey: ["admin", "status", userId],
+function AdminDashboard() {
+  const { data: counts } = useQuery({
+    queryKey: ["admin-counts"],
     queryFn: async () => {
-      if (!userId) return { isAdmin: false };
-      const isAdmin = await checkIsAdmin(userId);
-      return { isAdmin };
+      const [s, p, l, r, b] = await Promise.all([
+        supabase.from("services").select("*", { count: "exact", head: true }),
+        supabase.from("projects").select("*", { count: "exact", head: true }),
+        supabase.from("leads").select("*", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("reviews").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_published", true),
+      ]);
+      return {
+        services: s.count ?? 0,
+        projects: p.count ?? 0,
+        newLeads: l.count ?? 0,
+        reviews:  r.count ?? 0,
+        posts:    b.count ?? 0,
+      };
     },
-    enabled: authReady && hasSession && !!userId,
+    refetchInterval: 30_000,
   });
 
-  const leads = useQuery<Lead[]>({
-    queryKey: ["admin", "leads"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Lead[];
-    },
-    enabled: !!status.data?.isAdmin,
+  const { data: recentLeads = [], refetch: refetchLeads } = useQuery({
+    queryKey: ["admin-recent-leads"],
+    queryFn: async () =>
+      ((await supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(10)).data ?? []) as Lead[],
     refetchInterval: 15_000,
   });
 
-  const servicesQuery = useQuery<AdminService[]>({
-    queryKey: ["admin", "services"],
-    queryFn: async () => {
-      const services = await fetchServices();
-      return services.map((service) => ({
-        ...service,
-        icon: typeof service.icon === "string" ? (service.icon as ServiceIconKey) : "construction",
-      }));
-    },
-    enabled: !!status.data?.isAdmin,
-    staleTime: 60_000,
-  });
-
-  const pricesQuery = useQuery<PriceItem[]>({
-    queryKey: ["admin", "prices"],
-    queryFn: fetchPriceItems,
-    enabled: !!status.data?.isAdmin,
-    staleTime: 60_000,
-  });
-
-  const galleryQuery = useQuery<GalleryItem[]>({
-    queryKey: ["admin", "gallery"],
-    queryFn: fetchGalleryItems,
-    enabled: !!status.data?.isAdmin,
-    staleTime: 60_000,
-  });
-
-  const siteQuery = useQuery<SiteSettings>({
-    queryKey: ["admin", "site"],
-    queryFn: fetchSiteSettings,
-    enabled: !!status.data?.isAdmin,
-    staleTime: 60_000,
-  });
-
-  useEffect(() => {
-    if (servicesQuery.data) setServicesDraft(servicesQuery.data);
-  }, [servicesQuery.data]);
-
-  useEffect(() => {
-    if (pricesQuery.data) setPricesDraft(pricesQuery.data);
-  }, [pricesQuery.data]);
-
-  useEffect(() => {
-    if (galleryQuery.data) setGalleryDraft(galleryQuery.data);
-  }, [galleryQuery.data]);
-
-  useEffect(() => {
-    if (siteQuery.data) setSiteDraft(siteQuery.data);
-  }, [siteQuery.data]);
-
-  const saveServicesMut = useMutation({
-    mutationFn: async (services: AdminService[]) =>
-      saveServicesDiff(services as unknown as Service[], (servicesQuery.data ?? []) as unknown as Service[]),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "services"] });
-      queryClient.invalidateQueries({ queryKey: ["content", "services"] });
-    },
-  });
-
-  const savePricesMut = useMutation({
-    mutationFn: async (items: PriceItem[]) =>
-      savePricesDiff(items, pricesQuery.data ?? []),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "prices"] });
-      queryClient.invalidateQueries({ queryKey: ["content", "prices"] });
-    },
-  });
-
-  const saveGalleryMut = useMutation({
-    mutationFn: async (items: GalleryItem[]) =>
-      saveGalleryDiff(items, galleryQuery.data ?? []),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "gallery"] });
-      queryClient.invalidateQueries({ queryKey: ["content", "gallery"] });
-    },
-  });
-
-  const saveSiteMut = useMutation({
-    mutationFn: saveSiteSettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "site"] });
-      queryClient.invalidateQueries({ queryKey: ["content", "site"] });
-    },
-  });
-
-  const updateMut = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("leads").update({ status }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }),
-  });
-
-  const iconKeys = Object.keys(SERVICE_ICON_MAP) as ServiceIconKey[];
-  const priceGroups = useMemo(() => groupPriceItems(pricesDraft), [pricesDraft]);
-
-  if (!authReady || status.isLoading) {
-    return (
-      <div className="min-h-screen grid place-items-center bg-background">
-        <Seo title="Админка" noindex />
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--gold)]" />
-      </div>
-    );
-  }
-
-  if (status.data && !status.data.isAdmin) {
-    return (
-      <div className="min-h-screen grid place-items-center bg-background px-4">
-        <Seo title="Доступ запрещён" noindex />
-        <div className="max-w-md text-center">
-          <ShieldAlert className="mx-auto h-12 w-12 text-destructive mb-4" />
-          <h1 className="font-display text-2xl tracking-wide">Доступ запрещён</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Вашему аккаунту не назначена роль администратора.
-          </p>
-          <button
-            onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/admin/login" }); }}
-            className="mt-5 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-surface-2"
-          >
-            <LogOut className="h-4 w-4" /> Выйти
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const leadItems: Lead[] = leads.data ?? [];
-  const counts = leadItems.reduce<Record<string, number>>((acc, l) => {
-    acc[l.status] = (acc[l.status] ?? 0) + 1;
-    return acc;
-  }, {});
-
-  const currentMutation =
-    tab === "services"
-      ? saveServicesMut
-      : tab === "prices"
-      ? savePricesMut
-      : tab === "gallery"
-      ? saveGalleryMut
-      : tab === "site"
-      ? saveSiteMut
-      : null;
-
-  const isSaving = currentMutation?.isPending ?? false;
-  const saveError = currentMutation?.error instanceof Error ? currentMutation.error.message : undefined;
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Seo title="Админ-панель" noindex />
-      <header className="border-b border-border bg-surface-1 sticky top-0 z-10 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.3em] text-[var(--gold)]">Админ-панель</div>
-            <h1 className="font-display text-xl tracking-wide">Управление сайтом</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => {
-                leads.refetch();
-                servicesQuery.refetch();
-                pricesQuery.refetch();
-                galleryQuery.refetch();
-                siteQuery.refetch();
-              }}
-              className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-surface-2"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${leads.isFetching || servicesQuery.isFetching ? "animate-spin" : ""}`} /> Обновить
-            </button>
-            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground hidden sm:inline">На сайт</Link>
-            <button
-              onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/admin/login" }); }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-surface-2"
-            >
-              <LogOut className="h-3.5 w-3.5" /> Выйти
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="mb-6 flex flex-wrap gap-2">
-          {TAB_ITEMS.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => setTab(item.value)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${tab === item.value ? "bg-[var(--gold)] text-background" : "border border-border text-muted-foreground hover:bg-surface-2"}`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        {tab === "leads" ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              {(["new", "in_progress", "done", "archived"] as const).map((statusKey) => (
-                <div key={statusKey} className={`rounded-xl border p-4 ${STATUS_COLORS[statusKey]}`}>
-                  <div className="text-[10px] uppercase tracking-widest opacity-80">{STATUS_LABELS[statusKey]}</div>
-                  <div className="font-numeric text-3xl mt-1 leading-none">{counts[statusKey] ?? 0}</div>
-                </div>
-              ))}
-            </div>
-
-            {leads.isLoading ? (
-              <div className="py-20 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--gold)]" /></div>
-            ) : leadItems.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-surface-1 p-12 text-center">
-                <Inbox className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">Пока нет заявок. Они появятся здесь автоматически.</p>
-              </div>
-            ) : (
-              <ul className="space-y-3">
-                {leadItems.map((lead) => (
-                  <li key={lead.id} className="rounded-2xl border border-border bg-surface-1 p-4 sm:p-5 hover:border-[var(--gold)]/40 transition">
-                    <div className="flex flex-wrap items-start gap-3 justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-heading font-bold text-base">{lead.name}</span>
-                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${STATUS_COLORS[lead.status] ?? STATUS_COLORS.new}`}>
-                            {STATUS_LABELS[lead.status] ?? lead.status}
-                          </span>
-                          {lead.telegram_sent && (
-                            <span title="Отправлено в Telegram" className="inline-flex items-center gap-1 text-[10px] text-sky-400">
-                              <Send className="h-3 w-3" /> TG
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                          <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-1.5 text-[var(--gold)] hover:underline">
-                            <Phone className="h-3.5 w-3.5" /> {lead.phone}
-                          </a>
-                          {lead.service && <span className="text-muted-foreground">🛠 {lead.service}</span>}
-                        </div>
-                        {lead.message && (
-                          <div className="mt-2 flex items-start gap-2 text-sm text-foreground/80">
-                            <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
-                            <span>{lead.message}</span>
-                          </div>
-                        )}
-                        <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
-                          <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(lead.created_at).toLocaleString("ru-RU")}</span>
-                          {lead.source && <span>📍 {lead.source}</span>}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {(["new", "in_progress", "done", "archived"] as const)
-                          .filter((statusKey) => statusKey !== lead.status)
-                          .map((statusKey) => (
-                            <button
-                              key={statusKey}
-                              onClick={() => updateMut.mutate({ id: lead.id, status: statusKey })}
-                              disabled={updateMut.isPending}
-                              className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[10px] uppercase tracking-wider hover:bg-surface-2 disabled:opacity-50"
-                            >
-                              {statusKey === "done" ? <CheckCircle2 className="h-3 w-3" /> : statusKey === "archived" ? <Archive className="h-3 w-3" /> : null}
-                              {STATUS_LABELS[statusKey]}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        ) : tab === "services" ? (
-          <section>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Услуги</h2>
-                <p className="text-sm text-muted-foreground">Редактируйте описание, цену и порядок показа услуг.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setServicesDraft((current) => [
-                      ...current,
-                      {
-                        id: `new-${Date.now()}`,
-                        slug: "",
-                        title: "",
-                        short: "",
-                        priceFrom: "",
-                        icon: "construction",
-                        hero: "",
-                        description: "",
-                        includes: [],
-                        faq: [],
-                        imageUrl: null,
-                        order: current.length ? Math.max(...current.map((item) => item.order)) + 1 : 0,
-                      },
-                    ]);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-surface-2"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Добавить услугу
-                </button>
-                <button
-                  type="button"
-                  onClick={() => saveServicesMut.mutate(servicesDraft)}
-                  disabled={saveServicesMut.isPending}
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--gold)] px-4 py-2 text-sm text-background hover:brightness-95 disabled:opacity-50"
-                >
-                  <Save className="h-3.5 w-3.5" /> Сохранить раздел
-                </button>
-              </div>
-            </div>
-
-            {saveError ? <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">Ошибка: {saveError}</div> : null}
-
-            {servicesQuery.isLoading ? (
-              <div className="py-20 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--gold)]" /></div>
-            ) : (
-              <div className="space-y-5">
-                {servicesDraft.map((service, index) => (
-                  <div key={service.id} className="rounded-3xl border border-border bg-surface-1 p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold">Услуга #{index + 1}</p>
-                        <p className="text-xs text-muted-foreground">ID: {service.id}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setServicesDraft((current) => current.filter((item) => item.id !== service.id))}
-                        className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-destructive hover:bg-destructive/5"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Удалить
-                      </button>
-                    </div>
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Заголовок</span>
-                        <input
-                          value={service.title}
-                          onChange={(event) => {
-                            const title = event.target.value;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, title } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Ссылка (slug)</span>
-                        <input
-                          value={service.slug}
-                          onChange={(event) => {
-                            const slug = event.target.value;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, slug } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Цена от</span>
-                        <input
-                          value={service.priceFrom}
-                          onChange={(event) => {
-                            const priceFrom = event.target.value;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, priceFrom } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Краткое описание</span>
-                        <input
-                          value={service.short}
-                          onChange={(event) => {
-                            const short = event.target.value;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, short } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Иконка</span>
-                        <select
-                          value={service.icon}
-                          onChange={(event) => {
-                            const icon = event.target.value as ServiceIconKey;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, icon } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        >
-                          {iconKeys.map((iconKey) => (
-                            <option key={iconKey} value={iconKey}>{iconKey}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Порядок</span>
-                        <input
-                          type="number"
-                          value={service.order}
-                          onChange={(event) => {
-                            const order = Number(event.target.value);
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, order } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm lg:col-span-2">
-                        <span className="text-sm text-muted-foreground">Описание</span>
-                        <textarea
-                          value={service.description}
-                          onChange={(event) => {
-                            const description = event.target.value;
-                            setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, description } : item));
-                          }}
-                          className="mt-2 h-28 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <div className="block text-sm lg:col-span-2">
-                        <span className="text-sm text-muted-foreground">Фото услуги</span>
-                        <div className="mt-2 flex flex-col sm:flex-row gap-3 sm:items-center">
-                          {service.imageUrl ? (
-                            <img src={service.imageUrl} alt="" className="h-20 w-32 rounded-xl object-cover border border-border" />
-                          ) : (
-                            <div className="h-20 w-32 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground">
-                              <ImageIcon className="h-6 w-6" />
-                            </div>
-                          )}
-                          <div className="flex-1 space-y-2">
-                            <input
-                              value={service.imageUrl ?? ""}
-                              placeholder="URL или загрузите файл"
-                              onChange={(event) => {
-                                const imageUrl = event.target.value || null;
-                                setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl } : item));
-                              }}
-                              className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                            />
-                            <ImageUploadButton
-                              onUploaded={(url) =>
-                                setServicesDraft((current) => current.map((item) => item.id === service.id ? { ...item, imageUrl: url } : item))
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : tab === "prices" ? (
-          <section>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Цены</h2>
-                <p className="text-sm text-muted-foreground">Правьте категории и позиции прайса в одном месте.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextOrder = pricesDraft.length ? Math.max(...pricesDraft.map((item) => item.order)) + 1 : 0;
-                    setPricesDraft((current) => [
-                      ...current,
-                      {
-                        id: `new-${Date.now()}`,
-                        category_id: "general",
-                        category_title: "Основное",
-                        name: "",
-                        price: "",
-                        order: nextOrder,
-                      },
-                    ]);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-surface-2"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Добавить строку
-                </button>
-                <button
-                  type="button"
-                  onClick={() => savePricesMut.mutate(pricesDraft)}
-                  disabled={savePricesMut.isPending}
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--gold)] px-4 py-2 text-sm text-background hover:brightness-95 disabled:opacity-50"
-                >
-                  <Save className="h-3.5 w-3.5" /> Сохранить раздел
-                </button>
-              </div>
-            </div>
-
-            {saveError ? <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">Ошибка: {saveError}</div> : null}
-
-            {pricesQuery.isLoading ? (
-              <div className="py-20 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--gold)]" /></div>
-            ) : priceGroups.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-surface-1 p-12 text-center">
-                <Inbox className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">Прайс-лист пуст. Добавьте первую позицию.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {priceGroups.map((group) => (
-                  <div key={group.category_id} className="rounded-3xl border border-border bg-surface-1 p-5">
-                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                      <label className="flex-1 min-w-0 text-sm">
-                        <span className="block text-sm text-muted-foreground">Категория</span>
-                        <input
-                          value={group.category_title}
-                          onChange={(event) => {
-                            const category_title = event.target.value;
-                            setPricesDraft((current) => current.map((item) => item.category_id === group.category_id ? { ...item, category_title } : item));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const order = group.rows.length ? Math.max(...group.rows.map((item) => item.order)) + 1 : 0;
-                          setPricesDraft((current) => [
-                            ...current,
-                            {
-                              id: `new-${Date.now()}`,
-                              category_id: group.category_id,
-                              category_title: group.category_title,
-                              name: "",
-                              price: "",
-                              order,
-                            },
-                          ]);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-surface-2"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Добавить позицию
-                      </button>
-                    </div>
-                    <div className="space-y-4">
-                      {group.rows.map((item) => (
-                        <div key={item.id} className="grid gap-4 md:grid-cols-4">
-                          <label className="block text-sm">
-                            <span className="text-sm text-muted-foreground">Название</span>
-                            <input
-                              value={item.name}
-                              onChange={(event) => {
-                                const name = event.target.value;
-                                setPricesDraft((current) => current.map((row) => row.id === item.id ? { ...row, name } : row));
-                              }}
-                              className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm">
-                            <span className="text-sm text-muted-foreground">Цена</span>
-                            <input
-                              value={item.price}
-                              onChange={(event) => {
-                                const price = event.target.value;
-                                setPricesDraft((current) => current.map((row) => row.id === item.id ? { ...row, price } : row));
-                              }}
-                              className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm">
-                            <span className="text-sm text-muted-foreground">Порядок</span>
-                            <input
-                              type="number"
-                              value={item.order}
-                              onChange={(event) => {
-                                const order = Number(event.target.value);
-                                setPricesDraft((current) => current.map((row) => row.id === item.id ? { ...row, order } : row));
-                              }}
-                              className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                            />
-                          </label>
-                          <div className="mt-6 flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setPricesDraft((current) => current.filter((row) => row.id !== item.id))}
-                              className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm text-destructive hover:bg-destructive/5"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" /> Удалить
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : tab === "gallery" ? (
-          <section>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Галерея</h2>
-                <p className="text-sm text-muted-foreground">Добавляйте и упорядочивайте элементы галереи.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextOrder = galleryDraft.length ? Math.max(...galleryDraft.map((item) => item.order)) + 1 : 0;
-                    setGalleryDraft((current) => [
-                      ...current,
-                      {
-                        id: `new-${Date.now()}`,
-                        src: "",
-                        title: "",
-                        category: "general",
-                        category_label: "Основная",
-                        year: new Date().getFullYear(),
-                        order: nextOrder,
-                      },
-                    ]);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm hover:bg-surface-2"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Добавить элемент
-                </button>
-                <button
-                  type="button"
-                  onClick={() => saveGalleryMut.mutate(galleryDraft)}
-                  disabled={saveGalleryMut.isPending}
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--gold)] px-4 py-2 text-sm text-background hover:brightness-95 disabled:opacity-50"
-                >
-                  <Save className="h-3.5 w-3.5" /> Сохранить раздел
-                </button>
-              </div>
-            </div>
-
-            {saveError ? <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">Ошибка: {saveError}</div> : null}
-
-            {galleryQuery.isLoading ? (
-              <div className="py-20 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--gold)]" /></div>
-            ) : galleryDraft.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-surface-1 p-12 text-center">
-                <Inbox className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">Пока нет элементов галереи.</p>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {galleryDraft.map((item) => (
-                  <div key={item.id} className="rounded-3xl border border-border bg-surface-1 p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold">Элемент</p>
-                        <p className="text-xs text-muted-foreground">ID: {item.id}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setGalleryDraft((current) => current.filter((row) => row.id !== item.id))}
-                        className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-destructive hover:bg-destructive/5"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Удалить
-                      </button>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      <div className="block text-sm md:col-span-2 xl:col-span-3">
-                        <span className="text-sm text-muted-foreground">Фото</span>
-                        <div className="mt-2 flex flex-col sm:flex-row gap-3 sm:items-center">
-                          {item.src ? (
-                            <img src={item.src} alt="" className="h-20 w-32 rounded-xl object-cover border border-border" />
-                          ) : (
-                            <div className="h-20 w-32 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground">
-                              <ImageIcon className="h-6 w-6" />
-                            </div>
-                          )}
-                          <div className="flex-1 space-y-2">
-                            <input
-                              value={item.src}
-                              placeholder="URL или загрузите файл"
-                              onChange={(event) => {
-                                const src = event.target.value;
-                                setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src } : row));
-                              }}
-                              className="w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                            />
-                            <ImageUploadButton
-                              onUploaded={(url) =>
-                                setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, src: url } : row))
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Название</span>
-                        <input
-                          value={item.title}
-                          onChange={(event) => {
-                            const title = event.target.value;
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, title } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Категория</span>
-                        <input
-                          value={item.category}
-                          onChange={(event) => {
-                            const category = event.target.value;
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, category } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Метка категории</span>
-                        <input
-                          value={item.category_label}
-                          onChange={(event) => {
-                            const category_label = event.target.value;
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, category_label } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Год</span>
-                        <input
-                          type="number"
-                          value={item.year}
-                          onChange={(event) => {
-                            const year = Number(event.target.value);
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, year } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-sm text-muted-foreground">Порядок</span>
-                        <input
-                          type="number"
-                          value={item.order}
-                          onChange={(event) => {
-                            const order = Number(event.target.value);
-                            setGalleryDraft((current) => current.map((row) => row.id === item.id ? { ...row, order } : row));
-                          }}
-                          className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : (
-          <section>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Настройки сайта</h2>
-                <p className="text-sm text-muted-foreground">Изменяйте контактные данные, юридические реквизиты и карту.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => siteDraft && saveSiteMut.mutate(siteDraft)}
-                disabled={saveSiteMut.isPending || !siteDraft}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--gold)] px-4 py-2 text-sm text-background hover:brightness-95 disabled:opacity-50"
-              >
-                <Save className="h-3.5 w-3.5" /> Сохранить раздел
-              </button>
-            </div>
-
-            {saveError ? <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">Ошибка: {saveError}</div> : null}
-
-            {siteQuery.isLoading || !siteDraft ? (
-              <div className="py-20 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--gold)]" /></div>
-            ) : (
-              <div className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {([
-                    { label: "Название", key: "name" },
-                    { label: "Домен", key: "domain" },
-                    { label: "URL", key: "url" },
-                    { label: "Телефон", key: "phone" },
-                    { label: "Телефон Raw", key: "phoneRaw" },
-                    { label: "Email", key: "email" },
-                    { label: "WhatsApp", key: "whatsapp" },
-                    { label: "Telegram", key: "telegram" },
-                    { label: "VK", key: "vk" },
-                    { label: "Адрес", key: "address" },
-                    { label: "Часы работы", key: "hours" },
-                    { label: "Максимум заказа", key: "max" },
-                  ] as const).map((field) => (
-                    <label key={field.key} className="block text-sm">
-                      <span className="text-sm text-muted-foreground">{field.label}</span>
-                      <input
-                        value={siteDraft[field.key] ?? ""}
-                        onChange={(event) => {
-                          const nextValue = event.target.value;
-                          setSiteDraft((current) => current ? { ...current, [field.key]: nextValue } : current);
-                        }}
-                        className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                      />
-                    </label>
-                  ))}
-                </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <label className="block text-sm">
-                    <span className="text-sm text-muted-foreground">Год основания</span>
-                    <input
-                      type="number"
-                      value={siteDraft.yearFounded}
-                      onChange={(event) => {
-                        const yearFounded = Number(event.target.value);
-                        setSiteDraft((current) => current ? { ...current, yearFounded } : current);
-                      }}
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="text-sm text-muted-foreground">Широта</span>
-                    <input
-                      type="number"
-                      value={siteDraft.geo.lat}
-                      onChange={(event) => {
-                        const lat = Number(event.target.value);
-                        setSiteDraft((current) => current ? { ...current, geo: { ...current.geo, lat } } : current);
-                      }}
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="text-sm text-muted-foreground">Долгота</span>
-                    <input
-                      type="number"
-                      value={siteDraft.geo.lng}
-                      onChange={(event) => {
-                        const lng = Number(event.target.value);
-                        setSiteDraft((current) => current ? { ...current, geo: { ...current.geo, lng } } : current);
-                      }}
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <label className="block text-sm">
-                    <span className="text-sm text-muted-foreground">Юридическое имя</span>
-                    <input
-                      value={siteDraft.legal.name}
-                      onChange={(event) => {
-                        const name = event.target.value;
-                        setSiteDraft((current) => current ? { ...current, legal: { ...current.legal, name } } : current);
-                      }}
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="text-sm text-muted-foreground">ОГРН</span>
-                    <input
-                      value={siteDraft.legal.ogrn}
-                      onChange={(event) => {
-                        const ogrn = event.target.value;
-                        setSiteDraft((current) => current ? { ...current, legal: { ...current.legal, ogrn } } : current);
-                      }}
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="text-sm text-muted-foreground">ИНН</span>
-                    <input
-                      value={siteDraft.legal.inn}
-                      onChange={(event) => {
-                        const inn = event.target.value;
-                        setSiteDraft((current) => current ? { ...current, legal: { ...current.legal, inn } } : current);
-                      }}
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                </div>
-                <label className="block text-sm">
-                  <span className="text-sm text-muted-foreground">Код вставки Яндекс.Карты</span>
-                  <textarea
-                    value={siteDraft.yandexMapEmbed}
-                    onChange={(event) => {
-                      const yandexMapEmbed = event.target.value;
-                      setSiteDraft((current) => current ? { ...current, yandexMapEmbed } : current);
-                    }}
-                    className="mt-2 h-32 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </label>
-              </div>
-            )}
-          </section>
-        )}
-
-        {isSaving ? (
-          <div className="mt-6 rounded-2xl border border-[var(--gold)] bg-[var(--gold)]/10 px-4 py-3 text-sm text-[var(--gold)]">Сохранение...</div>
-        ) : null}
-      </main>
-    </div>
-  );
-}
-
-function ImageUploadButton({ onUploaded }: { onUploaded: (url: string) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFile = async (file: File) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const url = await uploadSiteImage(file);
-      onUploaded(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка загрузки");
-    } finally {
-      setBusy(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
+  const setStatus = async (id: string, status: string) => {
+    await supabase.from("leads").update({ status }).eq("id", id);
+    refetchLeads();
   };
 
+  const QUICK_LINKS = [
+    { to: "/admin/services",  label: "Услуги",     icon: Wrench,       desc: `${counts?.services ?? "…"} услуг` },
+    { to: "/admin/projects",  label: "Портфолио",  icon: FolderKanban, desc: `${counts?.projects ?? "…"} проектов` },
+    { to: "/admin/reviews",   label: "Отзывы",     icon: Star,         desc: `${counts?.reviews ?? "…"} отзывов` },
+    { to: "/admin/posts",     label: "Блог",       icon: Newspaper,    desc: `${counts?.posts ?? "…"} статей` },
+    { to: "/admin/leads",     label: "Все заявки", icon: Inbox,        desc: "открыть журнал" },
+    { to: "/admin/settings",  label: "Настройки",  icon: Settings,     desc: "телефон, адрес…" },
+  ];
+
   return (
-    <div className="flex items-center gap-2">
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFile(file);
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={busy}
-        className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-medium hover:bg-muted/30 disabled:opacity-60"
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-        {busy ? "Загрузка..." : "Загрузить фото"}
-      </button>
-      {error ? <span className="text-xs text-rose-400">{error}</span> : null}
+    <div className="space-y-8">
+      {/* Заголовок */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Дашборд</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {format(new Date(), "EEEE, d MMMM yyyy", { locale: ru })}
+          </p>
+        </div>
+        {(counts?.newLeads ?? 0) > 0 && (
+          <Link to="/admin/leads" className="flex items-center gap-2 btn-gold rounded-lg px-4 py-2 text-sm font-semibold animate-pulse">
+            <AlertCircle className="h-4 w-4" />
+            {counts?.newLeads} новых заявок
+          </Link>
+        )}
+      </div>
+
+      {/* Статистика */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
+        {[
+          { label: "Услуги",         value: counts?.services,  color: "text-primary" },
+          { label: "Проекты",        value: counts?.projects,  color: "text-primary" },
+          { label: "Новые заявки",   value: counts?.newLeads,  color: counts?.newLeads ? "text-emerald-400" : "text-muted-foreground" },
+          { label: "Активных отзывов",value: counts?.reviews,  color: "text-primary" },
+          { label: "Статей блога",   value: counts?.posts,     color: "text-primary" },
+        ].map((s, i) => (
+          <div key={i} className="glass rounded-2xl p-4 sm:p-5">
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground leading-tight">{s.label}</div>
+            <div className={`font-display text-3xl font-bold mt-2 ${s.color}`}>
+              {s.value ?? "…"}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Быстрый доступ */}
+      <div>
+        <h2 className="font-display text-lg font-bold mb-4">Управление</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {QUICK_LINKS.map(({ to, label, icon: Icon, desc }) => (
+            <Link key={to} to={to}
+              className="glass rounded-2xl p-4 hover:border-primary/50 hover:bg-surface-2 transition group flex flex-col gap-2">
+              <Icon className="h-5 w-5 text-primary" />
+              <div className="font-semibold text-sm">{label}</div>
+              <div className="text-[11px] text-muted-foreground">{desc}</div>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition mt-auto" />
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Последние заявки */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg font-bold">Последние заявки</h2>
+          <Link to="/admin/leads" className="text-sm text-primary hover:underline flex items-center gap-1">
+            Все заявки <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        {recentLeads.length === 0 ? (
+          <div className="glass rounded-2xl p-8 text-center text-muted-foreground text-sm">
+            Заявок пока нет
+          </div>
+        ) : (
+          <div className="glass rounded-2xl overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead className="border-b border-border text-xs uppercase tracking-widest text-muted-foreground">
+                <tr>
+                  <th className="p-4 text-left">Время</th>
+                  <th className="p-4 text-left">Имя / Телефон</th>
+                  <th className="p-4 text-left">Сообщение</th>
+                  <th className="p-4 text-left">Источник</th>
+                  <th className="p-4 text-left">Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentLeads.map((lead) => (
+                  <tr key={lead.id} className="border-t border-border hover:bg-surface-2/40 transition">
+                    <td className="p-4 text-xs text-muted-foreground whitespace-nowrap">
+                      {format(new Date(lead.created_at), "dd.MM HH:mm")}
+                    </td>
+                    <td className="p-4">
+                      <div className="font-medium">{lead.name || "—"}</div>
+                      <a href={`tel:${lead.phone.replace(/[^\d+]/g, "")}`}
+                         className="text-xs text-primary hover:underline">
+                        {lead.phone}
+                      </a>
+                    </td>
+                    <td className="p-4 text-xs text-muted-foreground max-w-[200px]">
+                      <div className="line-clamp-2">{lead.message || lead.service || "—"}</div>
+                    </td>
+                    <td className="p-4 text-xs text-muted-foreground">{lead.source || "—"}</td>
+                    <td className="p-4">
+                      <select
+                        value={lead.status}
+                        onChange={(e) => setStatus(lead.id, e.target.value)}
+                        className={`text-xs rounded-lg px-2 py-1 border font-medium cursor-pointer focus:outline-none ${STATUS_COLORS[lead.status] ?? STATUS_COLORS.new}`}
+                      >
+                        {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                          <option key={v} value={v} className="bg-background text-foreground">{l}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

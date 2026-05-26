@@ -1,3 +1,4 @@
+import { SITE } from "@/data/site";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchServices, fetchSettings } from "@/lib/site-data";
@@ -123,7 +124,7 @@ const PRICE_TABLE = [
 
 function PricesPage() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
-  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
+  const phone = settings?.contacts?.phone ?? SITE.phone;
 
   return (
     <>

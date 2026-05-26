@@ -1,3 +1,4 @@
+import { SITE } from "@/data/site";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -58,7 +59,7 @@ const FACTS = [
 function AboutPage() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
   const about = settings?.about ?? {};
-  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
+  const phone = settings?.contacts?.phone ?? SITE.phone;
 
   return (
     <>

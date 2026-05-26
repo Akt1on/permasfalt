@@ -1,3 +1,4 @@
+import { SITE } from "@/data/site";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Check, MapPin, ArrowRight, Shield, Truck, Clock, Award } from "lucide-react";
@@ -208,7 +209,7 @@ export const Route = createFileRoute("/goroda/$city")({
             name: "Пермь Асфальт 59",
             description: `Асфальтирование и благоустройство в ${c.nameRod}`,
             url: BASE,
-            telephone: "+73422777710",
+            telephone: SITE.phoneRaw,
             areaServed: { "@type": "City", name: c.name },
           }),
         },
@@ -222,7 +223,7 @@ function CityPage() {
   const { cityData: c, citySlug } = Route.useLoaderData();
   const { data: services = [] } = useQuery({ queryKey: ["services"], queryFn: fetchServices, staleTime: 5 * 60 * 1000 });
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
-  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
+  const phone = settings?.contacts?.phone ?? SITE.phone;
   const phoneRaw = phone.replace(/[^\d+]/g, "");
 
   return (

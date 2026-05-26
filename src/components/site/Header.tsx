@@ -1,6 +1,7 @@
+import { SITE } from "@/data/site";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m as motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone, ChevronDown, HardHat } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchServices, fetchSettings } from "@/lib/site-data";
@@ -23,7 +24,7 @@ export function Header() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
   const { data: services = [] } = useQuery({ queryKey: ["services"], queryFn: fetchServices, staleTime: 1000 * 60 * 5 });
-  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
+  const phone = settings?.contacts?.phone ?? SITE.phone;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);

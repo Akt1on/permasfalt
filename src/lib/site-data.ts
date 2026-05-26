@@ -61,6 +61,10 @@ export async function fetchReviews(): Promise<Review[]> {
   const { data } = await supabase.from("reviews").select("*").eq("is_active", true).order("sort_order");
   return (data ?? []) as Review[];
 }
+export async function fetchAllReviews(): Promise<Review[]> {
+  const { data } = await supabase.from("reviews").select("*").order("sort_order");
+  return (data ?? []) as Review[];
+}
 
 export type Post = {
   id: string; slug: string; title: string; excerpt: string | null;

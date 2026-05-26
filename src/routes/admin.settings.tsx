@@ -23,7 +23,7 @@ function AdminSettings() {
   }, [settings]);
 
   const save = async (key: string, value: any) => {
-    const { error } = await supabase.from("site_settings").upsert({ key, value });
+    const { error } = await supabase.from("site_settings").upsert({ key, value, updated_at: new Date().toISOString() });
     if (error) { toast.error(error.message); return; }
     toast.success("Сохранено"); qc.invalidateQueries({ queryKey: ["settings"] });
   };

@@ -317,3 +317,17 @@
 
 /* Bebas Neue + Nunito Sans via Google Fonts */
 /* Google Fonts loaded via <link> in __root.tsx for better performance */
+
+/* Custom cursor active state */
+html.custom-cursor-active * { cursor: none !important; }
+html.custom-cursor-active [data-hover="1"] {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  background: radial-gradient(circle, rgba(245,166,35,0.5) 0%, rgba(245,166,35,0) 70%) !important;
+}
+
+/* bg-white/8 — используется в NeuralCanvas секциях */
+.bg-white\/8 { background-color: oklch(1 0 0 / 0.08); }
+
+/* Smooth scroll offset for anchored sections */
+[id] { scroll-margin-top: 80px; }

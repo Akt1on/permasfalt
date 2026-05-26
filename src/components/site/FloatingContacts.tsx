@@ -1,3 +1,4 @@
+import { SITE } from "@/data/site";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, MessageCircle, Send, X, MessagesSquare } from "lucide-react";
@@ -17,7 +18,7 @@ export function FloatingContacts() {
   }, []);
 
   const contacts = settings?.contacts ?? {};
-  const phone    = contacts.phone ?? "+7 (342) 277-77-10";
+  const phone    = contacts.phone ?? SITE.phone;
   const whatsapp = (contacts.whatsapp ?? "").replace(/[^\d]/g, "");
   const telegram = (contacts.telegram ?? "").replace(/^@/, "");
   const max      = contacts.max ?? "";

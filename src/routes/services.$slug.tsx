@@ -1,3 +1,4 @@
+import { SITE } from "@/data/site";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, Phone } from "lucide-react";
@@ -57,7 +58,7 @@ export const Route = createFileRoute("/services/$slug")({
               "@type": "LocalBusiness",
               "@id": BASE + "/#business",
               name: "Пермь Асфальт 59",
-              telephone: "+73422777710",
+              telephone: SITE.phoneRaw,
               areaServed: "Пермь и Пермский край",
             },
             areaServed: [
@@ -107,7 +108,7 @@ function ServicePage() {
   });
   const { data: services = [] } = useQuery({ queryKey: ["services"], queryFn: fetchServices, staleTime: 1000 * 60 * 5 });
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings });
-  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
+  const phone = settings?.contacts?.phone ?? SITE.phone;
   const anchors = [
     { id: "overview", label: "Описание" },
     { id: "included", label: "Что включено" },

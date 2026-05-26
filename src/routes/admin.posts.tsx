@@ -16,8 +16,9 @@ function AdminPosts() {
 
   const save = async () => {
     if (!edit?.title || !edit?.slug) { toast.error("Заголовок и slug обязательны"); return; }
+    const { id: _id, created_at: _ca, updated_at: _ua, ...editRest } = edit as any;
     const payload: any = {
-      ...edit,
+      ...editRest,
       read_minutes: edit.read_minutes ?? 5,
       sort_order: edit.sort_order ?? 0,
       is_published: edit.is_published ?? false,
