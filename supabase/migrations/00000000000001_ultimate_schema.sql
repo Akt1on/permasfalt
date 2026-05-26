@@ -3,7 +3,11 @@
 -- ============================================================
 
 -- Roles
-CREATE TYPE IF NOT EXISTS public.app_role AS ENUM ('admin','user');
+DO $$ BEGIN
+    CREATE TYPE public.app_role AS ENUM ('admin','user');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
