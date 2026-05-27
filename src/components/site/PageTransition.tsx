@@ -1,10 +1,10 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { LazyMotion, domAnimation, AnimatePresence, m  } from "framer-motion";
 import type { ReactNode } from "react";
 
 export function PageTransition({ children, path }: { children: ReactNode; path: string }) {
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div
+      <m.div
         key={path}
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -13,7 +13,7 @@ export function PageTransition({ children, path }: { children: ReactNode; path: 
         className="min-h-[calc(100vh-6rem)]"
       >
         {children}
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }

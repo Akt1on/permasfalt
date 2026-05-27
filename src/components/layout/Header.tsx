@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Phone, Menu, X, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m, AnimatePresence  } from "framer-motion";
 import { SITE } from "@/data/site";
 import { SERVICES } from "@/data/services";
 import { getServiceIcon, useServices, useSiteSettings } from "@/lib/content";
@@ -75,7 +75,7 @@ export function Header() {
                 </Link>
                 <AnimatePresence>
                   {dropdown && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
@@ -98,7 +98,7 @@ export function Header() {
                           );
                         })}
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -135,7 +135,7 @@ export function Header() {
 
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -162,7 +162,7 @@ export function Header() {
                 {site.phone}
               </a>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </header>

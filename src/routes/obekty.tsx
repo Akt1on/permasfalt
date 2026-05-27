@@ -1,26 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteLayout } from "@/components/layout/SiteLayout";
-import { PageHeader } from "@/components/PageHeader";
 import { GallerySection } from "@/components/sections/GallerySection";
-import { CTASection } from "@/components/sections/CTASection";
-import { Seo } from "@/components/Seo";
+
+const BASE = "https://permasfalt59.ru";
 
 export const Route = createFileRoute("/obekty")({
+  head: () => ({
+    meta: [
+      { title: "Портфолио — фото объектов асфальтирования в Перми | Пермь Асфальт 59" },
+      { name: "description", content: "Фотогалерея выполненных объектов: асфальтирование, тротуарная плитка, земляные работы, демонтаж. Более 500 объектов в Перми и Пермском крае." },
+      { property: "og:url", content: BASE + "/obekty" },
+      { property: "og:image", content: BASE + "/og-image.png" },
+    ],
+    links: [{ rel: "canonical", href: BASE + "/obekty" }],
+  }),
   component: ObektyPage,
 });
 
 function ObektyPage() {
   return (
-    <SiteLayout>
-      <Seo title="Выполненные объекты — портфолио работ в Перми | Пермь Асфальт 59" description="Более 500 сданных объектов: асфальтирование, плитка, демонтаж, земляные работы." />
-      <PageHeader
-        breadcrumbs={[{ label: "Объекты" }]}
-        eyebrow="Портфолио"
-        title="Выполненные объекты"
-        description="Более 500 сданных объектов в Перми и Пермском крае. Каждое фото — наш реальный объект."
-      />
+    <div className="pt-24">
       <GallerySection withFilters />
-      <CTASection />
-    </SiteLayout>
+    </div>
   );
 }

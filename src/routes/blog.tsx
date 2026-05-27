@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m  } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { Section } from "@/components/site/Section";
 import { fetchPosts } from "@/lib/site-data";
@@ -71,7 +71,7 @@ function BlogPage() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((p, i) => (
-                <motion.div key={p.id}
+                <m.div key={p.id}
                   initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }}
                 >
@@ -94,7 +94,7 @@ function BlogPage() {
                       </div>
                     </div>
                   </Link>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           )}

@@ -1,51 +1,57 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Лёгкая анимированная нейро-сеть.
- * — Отключается при prefers-reduced-motion
- * — Отключается на мобильных (< 768px) — экономия батареи
- * — Pauseится при скрытой вкладке (visibilitychange)
- * — Реагирует на мышь: лёгкое притяжение точек
- * — O(n²) сдержан: максимум 40 точек (40×40/2 = 800 пар/кадр)
+ * Lightweight animated neural network background.
+ * - Pauses when tab hidden / out of viewport
+ * - Reacts to mouse with subtle attraction
+ * - Disabled when prefers-reduced-motion
  */
 export function NeuralCanvas({ className = "" }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas || typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!canvas) return;
+    if (typeof window === "undefined") return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    // Disable on mobile — save battery and prevent form jank
     if (window.innerWidth < 768) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const COUNT = 40;
-    const LINK_DIST = 140;
-    const LINK_DIST_SQ = LINK_DIST * LINK_DIST;
+    let w = 0;
+    let h = 0;
+    let raf = 0;
+    let running = true;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    let w = 0, h = 0, raf = 0, running = true;
     const mouse = { x: -9999, y: -9999 };
 
+    const isMobile = window.innerWidth < 768;
+    const COUNT = isMobile ? 32 : 70;
+    const LINK_DIST = isMobile ? 110 : 150;
+
     type P = { x: number; y: number; vx: number; vy: number };
-    const pts: P[] = [];
+    const points: P[] = [];
 
     const resize = () => {
-      const r = canvas.getBoundingClientRect();
-      w = r.width; h = r.height;
+      const rect = canvas.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
     const init = () => {
-      pts.length = 0;
+      points.length = 0;
       for (let i = 0; i < COUNT; i++) {
-        pts.push({
-          x: Math.random() * w, y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.22,
-          vy: (Math.random() - 0.5) * 0.22,
+        points.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
         });
       }
     };
@@ -54,36 +60,52 @@ export function NeuralCanvas({ className = "" }: { className?: string }) {
       if (!running) return;
       ctx.clearRect(0, 0, w, h);
 
-      for (const p of pts) {
-        const dx = mouse.x - p.x, dy = mouse.y - p.y;
+      for (const p of points) {
+        // mouse attraction
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
         const d2 = dx * dx + dy * dy;
-        if (d2 < 20000) { p.vx += (dx / 20000) * 0.04; p.vy += (dy / 20000) * 0.04; }
-        p.x += p.vx; p.y += p.vy;
-        p.vx *= 0.994; p.vy *= 0.994;
-        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
-        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+        if (d2 < 22500) {
+          p.vx += (dx / 22500) * 0.05;
+          p.vy += (dy / 22500) * 0.05;
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        // damping
+        p.vx *= 0.995;
+        p.vy *= 0.995;
+        // wrap
+        if (p.x < 0) p.x = w;
+        if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h;
+        if (p.y > h) p.y = 0;
       }
 
-      for (let i = 0; i < pts.length; i++) {
-        for (let j = i + 1; j < pts.length; j++) {
-          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < LINK_DIST_SQ) {
-            const op = (1 - Math.sqrt(d2) / LINK_DIST) * 0.32;
-            ctx.strokeStyle = `rgba(245,166,35,${op})`;
+      // links
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const a = points[i];
+          const b = points[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < LINK_DIST) {
+            const op = (1 - dist / LINK_DIST) * 0.35;
+            ctx.strokeStyle = `rgba(245, 166, 35, ${op})`;
             ctx.lineWidth = 0.6;
             ctx.beginPath();
-            ctx.moveTo(pts[i].x, pts[i].y);
-            ctx.lineTo(pts[j].x, pts[j].y);
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
             ctx.stroke();
           }
         }
       }
 
-      ctx.fillStyle = "rgba(245,166,35,0.82)";
-      for (const p of pts) {
+      // dots
+      ctx.fillStyle = "rgba(245, 166, 35, 0.85)";
+      for (const p of points) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -91,19 +113,27 @@ export function NeuralCanvas({ className = "" }: { className?: string }) {
     };
 
     const onMove = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
     };
-    const onLeave = () => { mouse.x = -9999; mouse.y = -9999; };
+    const onLeave = () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    };
     const onVisibility = () => {
       running = !document.hidden;
       if (running) draw();
     };
-    const onResize = () => { resize(); init(); };
 
-    resize(); init(); draw();
+    resize();
+    init();
+    draw();
 
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", () => {
+      resize();
+      init();
+    });
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseleave", onLeave);
     document.addEventListener("visibilitychange", onVisibility);
@@ -111,7 +141,6 @@ export function NeuralCanvas({ className = "" }: { className?: string }) {
     return () => {
       running = false;
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
       document.removeEventListener("visibilitychange", onVisibility);

@@ -88,7 +88,7 @@ export function Quiz() {
         <div className="bg-white rounded-3xl shadow-[0_24px_80px_-20px_oklch(0_0_0/0.4)] overflow-hidden">
           {/* Прогресс-бар */}
           <div className="h-1.5 bg-surface">
-            <motion.div
+            <m.div
               className="h-full"
               style={{ background: "var(--gradient-primary)" }}
               animate={{ width: `${((step) / totalSteps) * 100}%` }}
@@ -98,7 +98,7 @@ export function Quiz() {
 
           <div className="p-8 md:p-12">
             {done ? (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-10"
@@ -114,10 +114,10 @@ export function Quiz() {
                   </span>
                   <span className="text-sm text-muted-foreground">предварительно</span>
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={step}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -289,7 +289,7 @@ export function Quiz() {
                       </button>
                     )}
                   </div>
-                </motion.div>
+                </m.div>
               </AnimatePresence>
             )}
           </div>

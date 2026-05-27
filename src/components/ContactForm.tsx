@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m, AnimatePresence  } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { Loader2, CheckCircle2, Send, AlertCircle, Phone } from "lucide-react";
 import { SERVICES } from "@/data/services";
@@ -126,7 +126,7 @@ export function ContactForm({
           </div>
         )}
 
-        <motion.button
+        <m.button
           type="submit"
           disabled={isSubmitting}
           whileTap={{ scale: 0.97 }}
@@ -141,17 +141,17 @@ export function ContactForm({
               <Send className="h-4 w-4" /> Отправить заявку
             </>
           )}
-        </motion.button>
+        </m.button>
 
         <AnimatePresence>
           {sent && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-10 flex items-center justify-center bg-background/95 backdrop-blur-sm rounded-2xl p-6"
             >
-              <motion.div
+              <m.div
                 initial={{ scale: 0.85, opacity: 0, y: 10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 200, damping: 18 }}
@@ -181,8 +181,8 @@ export function ContactForm({
                     Отправить ещё одну заявку
                   </button>
                 </div>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           )}
         </AnimatePresence>
 

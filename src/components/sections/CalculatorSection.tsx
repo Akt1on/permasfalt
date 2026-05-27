@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m  } from "framer-motion";
 import { ArrowRight, Calculator as CalcIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { SectionTitle } from "@/components/ui-blocks";
@@ -34,7 +34,7 @@ export function CalculatorSection() {
           description="Ориентировочный расчёт за 30 секунд. Точную смету подготовим после выезда замерщика."
         />
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -99,7 +99,7 @@ export function CalculatorSection() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

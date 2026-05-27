@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m, AnimatePresence  } from "framer-motion";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { SectionTitle } from "@/components/ui-blocks";
 import { REVIEWS } from "@/data/reviews";
@@ -18,7 +18,7 @@ export function ReviewsSection() {
         <div className="mt-12 max-w-3xl mx-auto relative">
           <Quote className="absolute -top-8 -left-2 h-24 w-24 text-[var(--gold)]/10" />
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -39,7 +39,7 @@ export function ReviewsSection() {
                 </div>
                 <div className="text-xs uppercase tracking-widest text-muted-foreground">{r.date}</div>
               </div>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
 
           <div className="mt-6 flex justify-between items-center">

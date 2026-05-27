@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m  } from "framer-motion";
 import { ShieldCheck, Truck, Banknote, FileCheck, Clock3 } from "lucide-react";
 
 const ITEMS = [
@@ -15,7 +15,7 @@ export function TrustStrip() {
       <div className="container-x py-6">
         <div className="flex flex-wrap items-center justify-center md:justify-between gap-x-8 gap-y-3">
           {ITEMS.map((it, i) => (
-            <motion.div
+            <m.div
               key={it.label}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -27,7 +27,7 @@ export function TrustStrip() {
               <span className="font-heading font-bold uppercase tracking-wider text-xs">
                 {it.label}
               </span>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>

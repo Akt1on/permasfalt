@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m, AnimatePresence  } from "framer-motion";
 import { X } from "lucide-react";
 import { SectionTitle, FadeInUp } from "@/components/ui-blocks";
 import { GALLERY, GALLERY_FILTERS } from "@/data/gallery";
@@ -39,7 +39,7 @@ export function GallerySection({ withFilters = false }: { withFilters?: boolean 
 
         <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {items.map((item, i) => (
-            <motion.button
+            <m.button
               key={item.title + i}
               layout
               initial={{ opacity: 0, scale: 0.95 }}
@@ -65,14 +65,14 @@ export function GallerySection({ withFilters = false }: { withFilters?: boolean 
                   {item.title}
                 </div>
               </div>
-            </motion.button>
+            </m.button>
           ))}
         </div>
       </div>
 
       <AnimatePresence>
         {active && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -85,14 +85,14 @@ export function GallerySection({ withFilters = false }: { withFilters?: boolean 
             >
               <X className="h-5 w-5" />
             </button>
-            <motion.img
+            <m.img
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               src={active}
               alt=""
               className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-gold-lg"
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </section>

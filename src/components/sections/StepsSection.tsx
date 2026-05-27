@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m  } from "framer-motion";
 import { SectionTitle } from "@/components/ui-blocks";
 
 const STEPS = [
@@ -23,7 +23,7 @@ export function StepsSection() {
           <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[var(--gold)]/40 to-transparent" />
           <div className="space-y-8">
             {STEPS.map((s, i) => (
-              <motion.div
+              <m.div
                 key={s.n}
                 initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -40,7 +40,7 @@ export function StepsSection() {
                 </div>
                 <div className="hidden md:block" />
                 <div className="absolute left-6 md:left-1/2 top-2 -translate-x-1/2 h-4 w-4 rounded-full bg-gradient-gold gold-glow" />
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>

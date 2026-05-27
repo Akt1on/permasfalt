@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, domAnimation, m, AnimatePresence  } from "framer-motion";
 import { Phone, MessageCircle, Send, X, MessageSquare } from "lucide-react";
 import { SITE } from "@/data/site";
 
@@ -31,13 +31,13 @@ export function FloatingContactButton() {
       >
         <AnimatePresence mode="wait">
           {open ? (
-            <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
+            <m.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
               <X className="h-6 w-6" />
-            </motion.span>
+            </m.span>
           ) : (
-            <motion.span key="p" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
+            <m.span key="p" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
               <Phone className="h-6 w-6" />
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
       </button>
@@ -45,7 +45,7 @@ export function FloatingContactButton() {
       <AnimatePresence>
         {open &&
           ITEMS.map((item, i) => (
-            <motion.a
+            <m.a
               key={item.label}
               href={item.href}
               target={item.href.startsWith("http") ? "_blank" : undefined}
@@ -61,7 +61,7 @@ export function FloatingContactButton() {
                 <span className="h-5 w-5 grid place-items-center font-bold text-sm">{item.text}</span>
               )}
               <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
-            </motion.a>
+            </m.a>
           ))}
       </AnimatePresence>
     </div>

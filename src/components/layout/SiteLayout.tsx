@@ -4,7 +4,7 @@ import { Footer } from "./Footer";
 import { FloatingContactButton } from "./FloatingContactButton";
 import { CookieBanner } from "./CookieBanner";
 import { CustomCursor } from "@/components/CustomCursor";
-import { ExitIntentPopup } from "@/components/ExitIntentPopup";
+import { ExitIntentPopup } from "@/components/site/ExitIntentPopup";
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (

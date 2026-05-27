@@ -6,13 +6,14 @@ import { getRouter } from "./router";
 import "./styles.css";
 
 const router = getRouter();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,        // 1 мин — данные "свежие"
-      gcTime: 5 * 60 * 1000,       // 5 мин — кэш хранится
+      staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
       retry: 1,
-      refetchOnWindowFocus: false,  // не перезапрашивать при фокусе
+      refetchOnWindowFocus: false,
     },
   },
 });

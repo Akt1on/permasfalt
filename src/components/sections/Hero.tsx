@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m  } from "framer-motion";
 import { Phone, Calculator, ChevronDown, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import heroImg from "@/assets/hero-asphalt.jpg";
@@ -16,7 +16,7 @@ export function Hero() {
   return (
     <section className="relative min-h-[100svh] overflow-hidden grain bg-[#08080a]">
       {/* Background image */}
-      <motion.div
+      <m.div
         initial={{ scale: 1.12, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 2.6, ease: [0.22, 1, 0.36, 1] }}
@@ -34,7 +34,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
         <div className="absolute inset-0 bg-radial-gold opacity-60" />
-      </motion.div>
+      </m.div>
 
       {/* AI neural-network canvas overlay */}
       <NeuralCanvas className="opacity-50 mix-blend-screen" />
@@ -51,7 +51,7 @@ export function Hero() {
 
       <div className="relative container-x flex flex-col justify-center min-h-[100svh] pt-28 pb-24 md:pb-16">
         {/* AI badge */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.7 }}
@@ -65,7 +65,7 @@ export function Hero() {
           <span className="text-foreground/90">AI-powered estimate</span>
           <span className="hidden sm:inline text-foreground/40">·</span>
           <span className="hidden sm:inline text-muted-foreground">с {SITE.yearFounded}</span>
-        </motion.div>
+        </m.div>
 
         {/* Title rendered line-by-line so АСФАЛЬТИРОВАНИЕ never wraps mid-word */}
         <h1 className="max-w-5xl font-display leading-[0.88] tracking-[0.02em]">
@@ -74,7 +74,7 @@ export function Hero() {
               const i = li * 10 + wi;
               const isAsphalt = word === "АСФАЛЬТИРОВАНИЕ";
               return (
-                <motion.span
+                <m.span
                   key={`${li}-${wi}`}
                   initial={{ opacity: 0, y: "0.4em" }}
                   animate={{ opacity: 1, y: 0 }}
@@ -90,11 +90,11 @@ export function Hero() {
                   }
                 >
                   {word}
-                </motion.span>
+                </m.span>
               );
             }),
           )}
-          <motion.span
+          <m.span
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: 1.05, duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
@@ -102,7 +102,7 @@ export function Hero() {
           />
         </h1>
 
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.15, duration: 0.7 }}
@@ -110,9 +110,9 @@ export function Hero() {
         >
           Профессиональная укладка асфальта, тротуарной плитки и благоустройство территорий.
           Своя техника. Бесплатный выезд и замер.
-        </motion.p>
+        </m.p>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.4 }}
@@ -133,18 +133,18 @@ export function Hero() {
             <Phone className="h-4 w-4" />
             Позвонить
           </a>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.55 }}
           className="mt-5"
         >
           <PromoTimer />
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.7 }}
@@ -165,11 +165,11 @@ export function Hero() {
               </div>
             </div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.a
+      <m.a
         href="#next"
         aria-label="Прокрутить вниз"
         initial={{ opacity: 0 }}
@@ -178,13 +178,13 @@ export function Hero() {
         className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex-col items-center gap-1.5 text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-[var(--gold)] transition-colors"
       >
         <span>scroll</span>
-        <motion.span
+        <m.span
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
         >
           <ChevronDown className="h-4 w-4" />
-        </motion.span>
-      </motion.a>
+        </m.span>
+      </m.a>
     </section>
   );
 }
