@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchAllPosts, type Post } from "@/lib/site-data";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Pencil, Trash2, Plus } from "lucide-react";
+import { Field } from "@/components/admin/ui";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/posts")({ component: AdminPosts });
@@ -76,15 +77,15 @@ function AdminPosts() {
           <div className="glass rounded-2xl p-4 sm:p-6 max-w-3xl w-full max-h-[95vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-display text-2xl font-bold mb-5">{edit.id ? "Редактировать" : "Новая статья"}</h2>
             <div className="grid gap-3">
-              <F label="Заголовок"><I value={edit.title ?? ""} onChange={(v) => setEdit({ ...edit, title: v })} /></F>
-              <F label="Slug (англ.)"><I value={edit.slug ?? ""} onChange={(v) => setEdit({ ...edit, slug: v })} /></F>
-              <F label="Краткое описание (для превью и SEO)"><textarea value={edit.excerpt ?? ""} onChange={(e) => setEdit({ ...edit, excerpt: e.target.value })} rows={2} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" /></F>
-              <F label="Контент (markdown / простой HTML)"><textarea value={edit.content ?? ""} onChange={(e) => setEdit({ ...edit, content: e.target.value })} rows={14} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full font-mono text-sm focus:border-primary focus:outline-none" /></F>
+              <Field label="Заголовок"><input value={edit.title ?? ""} onChange={(e) => setEdit({ ...edit, title: e.target.value })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" /></Field>
+              <Field label="Slug (англ.)"><input value={edit.slug ?? ""} onChange={(e) => setEdit({ ...edit, slug: e.target.value })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" /></Field>
+              <Field label="Краткое описание (для превью и SEO)"><textarea value={edit.excerpt ?? ""} onChange={(e) => setEdit({ ...edit, excerpt: e.target.value })} rows={2} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" /></Field>
+              <Field label="Контент (markdown / простой HTML)"><textarea value={edit.content ?? ""} onChange={(e) => setEdit({ ...edit, content: e.target.value })} rows={14} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full font-mono text-sm focus:border-primary focus:outline-none" /></Field>
               <div className="grid grid-cols-2 gap-3">
-                <F label="Ключевые слова"><I value={edit.keywords ?? ""} onChange={(v) => setEdit({ ...edit, keywords: v })} /></F>
-                <F label="Время чтения (мин)"><I type="number" value={String(edit.read_minutes ?? 5)} onChange={(v) => setEdit({ ...edit, read_minutes: Number(v) })} /></F>
+                <Field label="Ключевые слова"><input value={edit.keywords ?? ""} onChange={(e) => setEdit({ ...edit, keywords: e.target.value })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" /></Field>
+                <Field label="Время чтения (мин)"><input type="number" value={String(edit.read_minutes ?? 5)} onChange={(e) => setEdit({ ...edit, read_minutes: Number(e.target.value) })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" /></Field>
               </div>
-              <F label="Обложка"><ImageUpload value={edit.cover_image} onChange={(url) => setEdit({ ...edit, cover_image: url })} /></F>
+              <Field label="Обложка"><ImageUpload value={edit.cover_image} onChange={(url) => setEdit({ ...edit, cover_image: url })} /></Field>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={edit.is_published ?? false} onChange={(e) => setEdit({ ...edit, is_published: e.target.checked })} /> Опубликовано</label>
             </div>
             <div className="mt-6 flex gap-3 justify-end">
@@ -98,9 +99,3 @@ function AdminPosts() {
   );
 }
 
-function F({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>{children}</div>;
-}
-function I({ value, onChange, type = "text" }: { value: string; onChange: (v: string) => void; type?: string }) {
-  return <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" />;
-}

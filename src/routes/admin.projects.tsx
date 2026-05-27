@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchAllProjects, fetchProjectPhotos, type Project } from "@/lib/site-data";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Pencil, Trash2, Plus, Image as ImageIcon, X, ChevronUp, ChevronDown } from "lucide-react";
+import { AdminModal, Field, Input } from "@/components/admin/ui";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/projects")({ component: AdminProjects });
@@ -122,8 +123,11 @@ function AdminProjects() {
       )}
 
       {edit && (
-        <Modal onClose={() => setEdit(null)}>
-          <h2 className="font-display text-2xl font-bold mb-5">{edit.id ? "Редактировать проект" : "Новый проект"}</h2>
+        <AdminModal
+          title={edit.id ? "Редактировать проект" : "Новый проект"}
+          onClose={() => setEdit(null)}
+          size="lg"
+        >
           <div className="grid gap-3">
             <Field label="Название *">
               <Input value={edit.title ?? ""} onChange={(v) => setEdit({ ...edit, title: v })} placeholder="Асфальтирование парковки ТЦ" />
@@ -170,10 +174,10 @@ function AdminProjects() {
             </label>
           </div>
           <div className="mt-6 flex gap-3 justify-end">
-            <button onClick={() => setEdit(null)} className="px-5 py-2.5 rounded-lg hover:bg-surface-2 transition">Отмена</button>
-            <button onClick={save} className="btn-gold rounded-lg px-5 py-2.5 font-semibold">Сохранить</button>
+            <button onClick={() => setEdit(null)} className="px-5 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-surface-2 transition-colors">Отмена</button>
+            <button onClick={save} className="btn-gold rounded-xl px-5 py-2.5 font-bold text-sm">Сохранить</button>
           </div>
-        </Modal>
+        </AdminModal>
       )}
 
       {photoEditId && <PhotosModal projectId={photoEditId} onClose={() => setPhotoEditId(null)} />}
@@ -234,18 +238,3 @@ function PhotosModal({ projectId, onClose }: { projectId: string; onClose: () =>
   );
 }
 
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur grid place-items-center p-2 sm:p-4" onClick={onClose}>
-      <div className="glass rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
-    </div>
-  );
-}
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>{children}</div>;
-}
-function Input({ value, onChange, type = "text", placeholder }: { value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
-  return <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" />;
-}

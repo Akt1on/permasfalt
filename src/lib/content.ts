@@ -97,15 +97,15 @@ type ServiceRow = {
   id: string;
   slug: string;
   title: string;
-  short: string;
-  price_from: string;
-  icon: string;
-  hero: string;
-  description: string;
+  short_description: string | null;
+  price_from: number | null;
+  icon: string | null;
+  hero: string | null;
+  description: string | null;
   includes: unknown;
   faq: unknown;
   image_url: string | null;
-  position: number;
+  sort_order: number;
 };
 
 type PriceRow = {
@@ -114,7 +114,7 @@ type PriceRow = {
   category_title: string;
   name: string;
   price: string;
-  position: number;
+  sort_order: number;
 };
 
 type GalleryRow = {
@@ -124,7 +124,7 @@ type GalleryRow = {
   category: string;
   category_label: string;
   year: number;
-  position: number;
+  sort_order: number;
 };
 
 function mapService(row: ServiceRow): Service {
@@ -132,15 +132,15 @@ function mapService(row: ServiceRow): Service {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    short: row.short,
-    priceFrom: row.price_from,
+    short: row.short_description ?? "",
+    priceFrom: row.price_from != null ? String(row.price_from) : "",
     icon: (row.icon as ServiceIconKey) ?? "construction",
     hero: row.hero,
     description: row.description,
     includes: Array.isArray(row.includes) ? (row.includes as string[]) : [],
     faq: Array.isArray(row.faq) ? (row.faq as { q: string; a: string }[]) : [],
     imageUrl: row.image_url,
-    order: row.position ?? 0,
+    order: row.sort_order ?? 0,
   };
 }
 
@@ -151,7 +151,7 @@ function mapPrice(row: PriceRow): PriceItem {
     category_title: row.category_title,
     name: row.name,
     price: row.price,
-    order: row.position ?? 0,
+    order: row.sort_order ?? 0,
   };
 }
 
@@ -163,7 +163,7 @@ function mapGallery(row: GalleryRow): GalleryItem {
     category: row.category,
     category_label: row.category_label,
     year: row.year,
-    order: row.position ?? 0,
+    order: row.sort_order ?? 0,
   };
 }
 
@@ -173,7 +173,7 @@ export async function fetchServices(): Promise<Service[]> {
   const { data, error } = await supabase
     .from("services")
     .select("*")
-    .order("position", { ascending: true });
+    .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapService(row as ServiceRow));
 }
@@ -183,7 +183,7 @@ export async function fetchPriceItems(): Promise<PriceItem[]> {
     .from("price_items")
     .select("*")
     .order("category_title", { ascending: true })
-    .order("position", { ascending: true });
+    .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapPrice(row as PriceRow));
 }
@@ -192,19 +192,33 @@ export async function fetchGalleryItems(): Promise<GalleryItem[]> {
   const { data, error } = await supabase
     .from("gallery_items")
     .select("*")
-    .order("position", { ascending: true });
+    .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapGallery(row as GalleryRow));
 }
 
 export async function fetchSiteSettings(): Promise<SiteSettings> {
-  const { data, error } = await supabase
-    .from("site_settings")
-    .select("data")
-    .eq("id", "main")
-    .maybeSingle();
-  if (error) throw error;
-  return (data?.data as SiteSettings) ?? (FALLBACK_SITE as SiteSettings);
+  const { data } = await supabase.from("site_settings").select("*");
+  if (!data || data.length === 0) return FALLBACK_SITE as SiteSettings;
+  const out: Record<string, any> = {};
+  for (const row of data as any[]) {
+    if ("key" in row && "value" in row) out[row.key] = row.value;
+    else if ("id" in row && "data" in row) Object.assign(out, row.data); // legacy
+  }
+  const contacts = out.contacts ?? {};
+  return {
+    ...FALLBACK_SITE,
+    phone: contacts.phone ?? FALLBACK_SITE.phone,
+    phoneRaw: (contacts.phone ?? FALLBACK_SITE.phone).replace(/[^\d+]/g, ""),
+    address: contacts.address ?? FALLBACK_SITE.address,
+    hours: contacts.work_hours ?? FALLBACK_SITE.hours,
+    whatsapp: contacts.whatsapp ?? FALLBACK_SITE.whatsapp,
+    telegram: contacts.telegram ?? FALLBACK_SITE.telegram,
+    vk: contacts.vk ?? FALLBACK_SITE.vk,
+    max: contacts.max ?? FALLBACK_SITE.max,
+    email: contacts.email ?? FALLBACK_SITE.email,
+    legal: out.legal ?? FALLBACK_SITE.legal,
+  } as SiteSettings;
 }
 
 // ---------- React Query hooks ----------
@@ -317,15 +331,15 @@ export async function saveServicesDiff(draft: Service[], original: Service[]) {
     const row = {
       slug: s.slug,
       title: s.title,
-      short: s.short,
-      price_from: s.priceFrom,
+      short_description: s.short,
+      price_from: s.priceFrom ? parseFloat(s.priceFrom) || null : null,
       icon: typeof s.icon === "string" ? s.icon : "construction",
       hero: s.hero,
       description: s.description,
       includes: s.includes,
       faq: s.faq,
       image_url: s.imageUrl ?? null,
-      position: s.order,
+      sort_order: s.order,
     };
     if (isUuid(s.id)) {
       const { error } = await supabase.from("services").update(row).eq("id", s.id);
@@ -352,7 +366,7 @@ export async function savePricesDiff(draft: PriceItem[], original: PriceItem[]) 
       category_title: p.category_title,
       name: p.name,
       price: p.price,
-      position: p.order,
+      sort_order: p.order,
     };
     if (isUuid(p.id)) {
       const { error } = await supabase.from("price_items").update(row).eq("id", p.id);
@@ -380,7 +394,7 @@ export async function saveGalleryDiff(draft: GalleryItem[], original: GalleryIte
       category: g.category,
       category_label: g.category_label,
       year: g.year,
-      position: g.order,
+      sort_order: g.order,
     };
     if (isUuid(g.id)) {
       const { error } = await supabase.from("gallery_items").update(row).eq("id", g.id);

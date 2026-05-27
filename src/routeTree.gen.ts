@@ -26,6 +26,7 @@ import { Route as AdminPostsImport } from './routes/admin.posts'
 import { Route as AdminLeadsImport } from './routes/admin.leads'
 import { Route as AdminGalleryImport } from './routes/admin.gallery'
 import { Route as AdminPricesImport } from './routes/admin.prices'
+import { Route as AdminIndexImport } from './routes/admin.index'
 import { Route as ServicesSlugImport } from './routes/services.$slug'
 import { Route as PortfolioSlugImport } from './routes/portfolio.$slug'
 import { Route as GorodaCityImport } from './routes/goroda.$city'
@@ -51,6 +52,7 @@ const AdminPostsRoute = AdminPostsImport.update({ path: '/posts', getParentRoute
 const AdminLeadsRoute = AdminLeadsImport.update({ path: '/leads', getParentRoute: () => AdminRoute } as any)
 const AdminGalleryRoute = AdminGalleryImport.update({ path: '/gallery', getParentRoute: () => AdminRoute } as any)
 const AdminPricesRoute = AdminPricesImport.update({ path: '/prices', getParentRoute: () => AdminRoute } as any)
+const AdminIndexRoute = AdminIndexImport.update({ path: '/', getParentRoute: () => AdminRoute } as any)
 const ServicesSlugRoute = ServicesSlugImport.update({ path: '/$slug', getParentRoute: () => ServicesRoute } as any)
 const PortfolioSlugRoute = PortfolioSlugImport.update({ path: '/$slug', getParentRoute: () => PortfolioRoute } as any)
 const GorodaCityRoute = GorodaCityImport.update({ path: '/$city', getParentRoute: () => GorodaRoute } as any)
@@ -73,6 +75,7 @@ export interface FileRoutesByPath {
   '/blog/$slug': { id: '/blog/$slug'; path: '/$slug'; fullPath: '/blog/$slug'; preLoaderRoute: typeof BlogSlugImport; parentRoute: typeof BlogRoute; }
   '/auth': { id: '/auth'; path: '/auth'; fullPath: '/auth'; preLoaderRoute: typeof AuthImport; parentRoute: typeof rootRoute; }
   '/admin': { id: '/admin'; path: '/admin'; fullPath: '/admin'; preLoaderRoute: typeof AdminImport; parentRoute: typeof rootRoute; }
+  '/admin/': { id: '/admin/'; path: '/'; fullPath: '/admin/'; preLoaderRoute: typeof AdminIndexImport; parentRoute: typeof AdminRoute; }
   '/admin/gallery': { id: '/admin/gallery'; path: '/gallery'; fullPath: '/admin/gallery'; preLoaderRoute: typeof AdminGalleryImport; parentRoute: typeof AdminRoute; }
   '/admin/prices': { id: '/admin/prices'; path: '/prices'; fullPath: '/admin/prices'; preLoaderRoute: typeof AdminPricesImport; parentRoute: typeof AdminRoute; }
   '/admin/leads': { id: '/admin/leads'; path: '/leads'; fullPath: '/admin/leads'; preLoaderRoute: typeof AdminLeadsImport; parentRoute: typeof AdminRoute; }
@@ -97,6 +100,7 @@ export function createRouteTree() {
     TsenyRoute,
     AuthRoute,
     AdminRoute._addFileChildren([
+      AdminIndexRoute,
       AdminLeadsRoute,
       AdminGalleryRoute,
       AdminPricesRoute,
