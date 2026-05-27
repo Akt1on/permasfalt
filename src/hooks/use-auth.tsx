@@ -1,36 +1,37 @@
 import { useEffect, useState } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
 
-    const applySession = (sess: Session | null) => {
-      if (!alive) return;
-      setSession(sess);
-      setUser(sess?.user ?? null);
-      setLoading(false);
+    const checkAdmin = async (u: User | null) => {
+      if (!u) { if (alive) { setIsAdmin(false); setLoading(false); } return; }
+      // Primary: RPC is_admin() — email-based check in DB (migration 20260524000003)
+      const { data, error } = await supabase.rpc("is_admin");
+      const admin = !error && data === true;
+      if (alive) { setIsAdmin(admin); setLoading(false); }
     };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, sess) => {
-      setTimeout(() => applySession(sess), 0);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, sess) => {
+      const u = sess?.user ?? null;
+      if (alive) setUser(u);
+      checkAdmin(u);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session);
+      const u = session?.user ?? null;
+      if (alive) setUser(u);
+      checkAdmin(u);
     });
 
-    return () => { alive = false; sub.subscription.unsubscribe(); };
+    return () => { alive = false; subscription.unsubscribe(); };
   }, []);
 
-  // Only whitelisted email gets admin access
-  const ADMIN_EMAIL = "permsite1@gmail.com";
-  const isAdmin = !!user && user.email === ADMIN_EMAIL;
-
-  return { session, user, isAdmin, loading };
+  return { user, isAdmin, loading };
 }

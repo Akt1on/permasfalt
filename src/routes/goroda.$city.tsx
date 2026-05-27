@@ -163,8 +163,8 @@ export const Route = createFileRoute("/goroda/$city")({
   head: ({ loaderData, params }) => {
     const c = loaderData?.cityData;
     if (!c) return { meta: [] };
-    const title = `Асфальтирование в ${c.nameRod} — цены от 1500 ₽/м², выезд бесплатно | Пермь Асфальт 59`;
-    const description = `Асфальтирование в ${c.nameRod}${c.distance ? ` (${c.distance})` : ""} от 1500 ₽/м². ${c.services.slice(0, 3).join(", ")}. Бесплатный выезд замерщика, гарантия 3 года, договор. Звоните: +7 (342) 277-77-10.`;
+    const title = `Асфальтирование в ${c.nameRod} — цены от 300 ₽/м², выезд бесплатно | Пермь Асфальт 59`;
+    const description = `Асфальтирование в ${c.nameRod}${c.distance ? ` (${c.distance})` : ""} от 300 ₽/м². ${c.services.slice(0, 3).join(", ")}. Бесплатный выезд замерщика, гарантия 3 года, договор. Звоните: +7 (342) 277-77-10.`;
     const url = `${BASE}/goroda/${params.city}`;
     return {
       meta: [

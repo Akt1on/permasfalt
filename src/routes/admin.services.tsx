@@ -9,13 +9,12 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/services")({ component: AdminServices });
 
-// Удаляем id из payload для INSERT
 function toInsertPayload(edit: Partial<Service>) {
-  const { id, ...rest } = edit as any;
+  const { id, created_at, updated_at, ...rest } = edit as any;
   return { ...rest, sort_order: edit.sort_order ?? 0, is_active: edit.is_active ?? true };
 }
 function toUpdatePayload(edit: Partial<Service>) {
-  const { id, created_at, ...rest } = edit as any;
+  const { id, created_at, updated_at, ...rest } = edit as any;
   return { ...rest, sort_order: edit.sort_order ?? 0, is_active: edit.is_active ?? true };
 }
 
@@ -35,11 +34,19 @@ function AdminServices() {
       ? await supabase.from("services").update(toUpdatePayload(edit)).eq("id", edit.id)
       : await supabase.from("services").insert(toInsertPayload(edit));
 
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      if (error.message.includes("unique") || error.message.includes("duplicate")) {
+        toast.error("Такой slug уже существует. Измените URL-идентификатор.");
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
     toast.success("Сохранено");
     setEdit(null);
     qc.invalidateQueries({ queryKey: ["admin-services"] });
     qc.invalidateQueries({ queryKey: ["services"] });
+    qc.invalidateQueries({ queryKey: ["content", "services"] });
   };
 
   const del = async (id: string) => {
@@ -70,7 +77,10 @@ function AdminServices() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold">Услуги</h1>
+        <div>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">Услуги</h1>
+          <p className="text-sm text-muted-foreground mt-1">Управляйте описанием, ценами и порядком отображения услуг.</p>
+        </div>
         <button
           onClick={() => setEdit({ is_active: true, price_unit: "м²", sort_order: services.length })}
           className="btn-gold rounded-lg px-4 py-2 text-sm font-semibold flex items-center gap-2"
@@ -90,7 +100,7 @@ function AdminServices() {
                 <th className="p-4">Название / Slug</th>
                 <th className="p-4">Цена от</th>
                 <th className="p-4">Статус</th>
-                <th className="p-4 w-36"></th>
+                <th className="p-4 w-28"></th>
               </tr>
             </thead>
             <tbody>
@@ -106,10 +116,10 @@ function AdminServices() {
                   </td>
                   <td className="p-4">
                     <div className="font-medium">{s.title}</div>
-                    <div className="text-xs text-muted-foreground">{s.slug}</div>
+                    <div className="text-xs text-muted-foreground">/uslugi/{s.slug}</div>
                   </td>
-                  <td className="p-4">
-                    {s.price_from ? `от ${Number(s.price_from).toLocaleString("ru-RU")} ₽ / ${s.price_unit}` : "—"}
+                  <td className="p-4 whitespace-nowrap">
+                    {s.price_from ? `от ${Number(s.price_from).toLocaleString("ru-RU")} ₽ / ${s.price_unit ?? "м²"}` : "—"}
                   </td>
                   <td className="p-4">
                     <button onClick={() => toggleActive(s)}
@@ -126,7 +136,7 @@ function AdminServices() {
                 </tr>
               ))}
               {services.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Услуг пока нет</td></tr>
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Услуг пока нет. Нажмите «Добавить».</td></tr>
               )}
             </tbody>
           </table>
@@ -136,28 +146,61 @@ function AdminServices() {
       {edit && (
         <Modal onClose={() => setEdit(null)}>
           <h2 className="font-display text-2xl font-bold mb-5">{edit.id ? "Редактировать услугу" : "Новая услуга"}</h2>
-          <div className="grid gap-3">
-            <Field label="Название *">
-              <Input value={edit.title ?? ""} onChange={(v) => setEdit({ ...edit, title: v })} placeholder="Асфальтирование" />
+          <div className="grid gap-4">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label="Название *">
+                <Input value={edit.title ?? ""} onChange={(v) => setEdit({ ...edit, title: v })} placeholder="Асфальтирование" />
+              </Field>
+              <Field label="Slug (URL, латиница) *">
+                <Input
+                  value={edit.slug ?? ""}
+                  onChange={(v) => setEdit({ ...edit, slug: v.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") })}
+                  placeholder="asfaltirovanie"
+                />
+              </Field>
+            </div>
+            <Field label="Hero — подпись под заголовком страницы (SEO)">
+              <Input value={(edit as any).hero ?? ""} onChange={(v) => setEdit({ ...edit, hero: v } as any)} placeholder="Профессиональное асфальтирование в Перми с гарантией 3 года" />
             </Field>
-            <Field label="Slug (URL, только латиница) *">
-              <Input value={edit.slug ?? ""} onChange={(v) => setEdit({ ...edit, slug: v.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") })} placeholder="asfaltirovanie" />
-            </Field>
-            <Field label="Краткое описание">
+            <Field label="Краткое описание (карточка услуги)">
               <Input value={edit.short_description ?? ""} onChange={(v) => setEdit({ ...edit, short_description: v })} placeholder="Укладка асфальта любой сложности" />
             </Field>
-            <Field label="Полное описание">
+            <Field label="Полное описание (SEO-текст на странице)">
               <textarea
                 value={edit.description ?? ""}
                 onChange={(e) => setEdit({ ...edit, description: e.target.value })}
                 rows={5}
                 className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none resize-none"
-                placeholder="Подробное описание услуги…"
+                placeholder="Подробное описание услуги для SEO и клиентов…"
+              />
+            </Field>
+            <Field label="Что входит (каждый пункт — отдельная строка)">
+              <textarea
+                value={((edit as any).includes ?? []).join("\n")}
+                onChange={(e) => setEdit({ ...edit, includes: e.target.value.split("\n").filter(Boolean) } as any)}
+                rows={5}
+                className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none resize-none font-mono text-xs"
+                placeholder={"Бесплатный выезд замерщика\nУкладка асфальта финишером\nГарантия 3 года"}
+              />
+            </Field>
+            <Field label="FAQ — Вопрос | Ответ (каждая пара с новой строки)">
+              <textarea
+                value={((edit as any).faq ?? []).map((f: any) => `${f.q} | ${f.a}`).join("\n")}
+                onChange={(e) => {
+                  const faq = e.target.value.split("\n").filter(Boolean).map((line) => {
+                    const sep = line.indexOf(" | ");
+                    return sep === -1 ? { q: line, a: "" } : { q: line.slice(0, sep).trim(), a: line.slice(sep + 3).trim() };
+                  });
+                  setEdit({ ...edit, faq } as any);
+                }}
+                rows={5}
+                className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none resize-none font-mono text-xs"
+                placeholder={"Сколько стоит 1 м²? | от 300 ₽/м²\nКакая гарантия? | 3 года в договоре"}
               />
             </Field>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <Field label="Цена от (₽)">
-                <Input type="number" value={String(edit.price_from ?? "")} onChange={(v) => setEdit({ ...edit, price_from: v ? Number(v) : null })} placeholder="1500" />
+                <Input type="number" value={String(edit.price_from ?? "")} onChange={(v) => setEdit({ ...edit, price_from: v ? Number(v) : null })} placeholder="300" />
               </Field>
               <Field label="Единица">
                 <Input value={edit.price_unit ?? "м²"} onChange={(v) => setEdit({ ...edit, price_unit: v })} placeholder="м²" />
@@ -170,12 +213,8 @@ function AdminServices() {
               <ImageUpload value={edit.image_url} onChange={(url) => setEdit({ ...edit, image_url: url })} />
             </Field>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={edit.is_active ?? true}
-                onChange={(e) => setEdit({ ...edit, is_active: e.target.checked })}
-                className="rounded"
-              />
+              <input type="checkbox" checked={edit.is_active ?? true}
+                onChange={(e) => setEdit({ ...edit, is_active: e.target.checked })} className="rounded" />
               Активна (показывать на сайте)
             </label>
             {edit.id && <PricingEditor serviceId={edit.id} />}
@@ -192,10 +231,7 @@ function AdminServices() {
 
 function PricingEditor({ serviceId }: { serviceId: string }) {
   const qc = useQueryClient();
-  const { data: items = [] } = useQuery({
-    queryKey: ["pricing", serviceId],
-    queryFn: () => fetchPricing(serviceId),
-  });
+  const { data: items = [] } = useQuery({ queryKey: ["pricing", serviceId], queryFn: () => fetchPricing(serviceId) });
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("м²");
   const [price, setPrice] = useState("");
@@ -204,16 +240,12 @@ function PricingEditor({ serviceId }: { serviceId: string }) {
     if (!name.trim()) { toast.error("Введите название позиции"); return; }
     if (!price || isNaN(Number(price))) { toast.error("Введите корректную цену"); return; }
     const { error } = await supabase.from("pricing_items").insert({
-      service_id: serviceId,
-      name: name.trim(),
-      unit: unit.trim() || "м²",
-      price: Number(price),
-      sort_order: items.length,
+      service_id: serviceId, name: name.trim(), unit: unit.trim() || "м²",
+      price: Number(price), sort_order: items.length,
     });
     if (error) { toast.error(error.message); return; }
     setName(""); setPrice("");
     qc.invalidateQueries({ queryKey: ["pricing", serviceId] });
-    qc.invalidateQueries({ queryKey: ["pricing-all"] });
   };
 
   const del = async (id: string) => {
@@ -229,32 +261,22 @@ function PricingEditor({ serviceId }: { serviceId: string }) {
         {items.map((it: any) => (
           <div key={it.id} className="flex items-center gap-2 bg-surface-2/50 rounded-lg px-3 py-2 text-sm">
             <span className="flex-1 truncate">{it.name}</span>
-            <span className="text-primary font-semibold whitespace-nowrap">
-              {Number(it.price).toLocaleString("ru-RU")} ₽ / {it.unit}
-            </span>
-            <button onClick={() => del(it.id)} className="p-1 text-destructive hover:bg-surface-2 rounded flex-shrink-0">
-              <X className="h-3.5 w-3.5" />
-            </button>
+            <span className="text-primary font-semibold whitespace-nowrap">{Number(it.price).toLocaleString("ru-RU")} ₽ / {it.unit}</span>
+            <button onClick={() => del(it.id)} className="p-1 text-destructive hover:bg-surface-2 rounded"><X className="h-3.5 w-3.5" /></button>
           </div>
         ))}
         {items.length === 0 && <div className="text-xs text-muted-foreground">Позиции не добавлены</div>}
       </div>
       <div className="grid grid-cols-12 gap-2">
-        <input
-          value={name} onChange={(e) => setName(e.target.value)} placeholder="Название позиции"
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Название позиции"
           className="col-span-6 bg-input border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none"
-          onKeyDown={(e) => e.key === "Enter" && add()}
-        />
-        <input
-          value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="ед."
+          onKeyDown={(e) => e.key === "Enter" && add()} />
+        <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="ед."
+          className="col-span-2 bg-input border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+        <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Цена" type="number"
           className="col-span-2 bg-input border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none"
-        />
-        <input
-          value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Цена" type="number"
-          className="col-span-2 bg-input border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none"
-          onKeyDown={(e) => e.key === "Enter" && add()}
-        />
-        <button onClick={add} className="col-span-2 btn-gold rounded-lg text-sm font-semibold flex items-center justify-center gap-1">
+          onKeyDown={(e) => e.key === "Enter" && add()} />
+        <button onClick={add} className="col-span-2 btn-gold rounded-lg text-sm font-semibold flex items-center justify-center">
           <Plus className="h-4 w-4" />
         </button>
       </div>
@@ -265,32 +287,15 @@ function PricingEditor({ serviceId }: { serviceId: string }) {
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur grid place-items-center p-2 sm:p-4" onClick={onClose}>
-      <div
-        className="glass rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="glass rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[95vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
   );
 }
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>
-      {children}
-    </div>
-  );
+  return <div><label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>{children}</div>;
 }
-
-function Input({ value, onChange, type = "text", placeholder }: {
-  value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
-}) {
-  return (
-    <input
-      type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-      className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none"
-    />
-  );
+function Input({ value, onChange, type = "text", placeholder }: { value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  return <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" />;
 }

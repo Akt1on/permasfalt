@@ -412,13 +412,15 @@ export async function uploadSiteImage(file: File): Promise<string> {
   return data.publicUrl;
 }
 
-export async function checkIsAdmin(userId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error) return false;
-  return !!data;
+export async function checkIsAdmin(_userId: string): Promise<boolean> {
+  // Uses email-based is_admin() RPC (migration 20260524000003)
+  const { data, error } = await supabase.rpc("is_admin");
+  if (error) {
+    // Fallback to user_roles for backwards compatibility
+    const { data: roleData } = await supabase
+      .from("user_roles").select("role")
+      .eq("user_id", _userId).eq("role", "admin").maybeSingle();
+    return !!roleData;
+  }
+  return data === true;
 }
