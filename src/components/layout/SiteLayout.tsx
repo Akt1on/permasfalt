@@ -1,21 +1,13 @@
 import type { ReactNode } from "react";
-import { Header } from "./Header";
-import { Footer } from "./Footer";
-import { FloatingContactButton } from "./FloatingContactButton";
-import { CookieBanner } from "./CookieBanner";
-import { CustomCursor } from "@/components/CustomCursor";
+import { Header } from "@/components/site/Header";
+import { Footer } from "@/components/site/Footer";
+import { FloatingContacts } from "@/components/site/FloatingContacts";
+import { CookieBanner } from "@/components/site/CookieBanner";
 import { ExitIntentPopup } from "@/components/site/ExitIntentPopup";
 
+// Compatibility wrapper — used by legacy pages (uslugi, kontakty, ceny, etc.)
+// __root.tsx already provides Header/Footer for all non-admin routes,
+// so this component simply renders children to avoid double-rendering.
 export function SiteLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
-      <Header />
-      <main className="flex-1 pt-20">{children}</main>
-      <Footer />
-      <FloatingContactButton />
-      <CookieBanner />
-      <CustomCursor />
-      <ExitIntentPopup />
-    </div>
-  );
+  return <>{children}</>;
 }

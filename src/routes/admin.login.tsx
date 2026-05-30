@@ -1,10 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Seo } from "@/components/Seo";
 import { Loader2, LogIn, Shield, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/login")({
+  head: () => ({
+    meta: [
+      { title: "Вход в админ-панель | Пермь Асфальт 59" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: AdminLoginPage,
 });
 
@@ -42,56 +47,64 @@ function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Seo title="Вход в админ-панель" noindex />
       <div className="w-full max-w-md">
-        <Link to="/" className="block text-center text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6 hover:text-[var(--gold)] transition">
+        <Link
+          to="/"
+          className="block text-center text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6 hover:text-primary transition"
+        >
           ← На сайт
         </Link>
-        <div className="rounded-2xl border border-border bg-surface-1 p-7 shadow-card">
+        <div className="rounded-2xl border border-border bg-white p-7 shadow-[var(--shadow-elevated)]">
           <div className="flex items-center gap-3 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-gradient-gold grid place-items-center">
-              <Shield className="h-5 w-5 text-background" />
+            <div className="h-10 w-10 rounded-xl btn-gold grid place-items-center shrink-0">
+              <Shield className="h-5 w-5 text-black" />
             </div>
             <div>
-              <h1 className="font-display text-xl tracking-wide">Админ-панель</h1>
+              <h1 className="font-display text-xl font-bold tracking-wide">Админ-панель</h1>
               <p className="text-xs text-muted-foreground">Пермь Асфальт 59</p>
             </div>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Email</label>
+              <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full rounded-lg bg-surface-2 border border-border px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--gold)]"
+                className="w-full rounded-xl bg-input border border-border px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="email"
               />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Пароль</label>
+              <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">
+                Пароль
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full rounded-lg bg-surface-2 border border-border px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--gold)]"
+                className="w-full rounded-xl bg-input border border-border px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
               />
             </div>
+
             {error && (
-              <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+              <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-gold px-5 py-3 text-sm font-bold uppercase tracking-wider text-background shadow-gold disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-2 btn-gold rounded-xl px-5 py-3 text-sm font-bold uppercase tracking-wider disabled:opacity-60"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
               {mode === "signup" ? "Зарегистрироваться" : "Войти"}

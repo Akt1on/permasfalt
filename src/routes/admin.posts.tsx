@@ -4,103 +4,149 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllPosts, type Post } from "@/lib/site-data";
 import { ImageUpload } from "@/components/admin/ImageUpload";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Newspaper } from "lucide-react";
 import { toast } from "sonner";
+import {
+  TitleBar, AdminModal, ModalActions, Field, Input, Textarea,
+  CheckboxRow, AdminTable, SkeletonRow, EmptyState, ActionBtn,
+} from "@/components/admin/ui";
 
 export const Route = createFileRoute("/admin/posts")({ component: AdminPosts });
 
 function AdminPosts() {
   const qc = useQueryClient();
-  const { data: posts = [] } = useQuery({ queryKey: ["admin-posts"], queryFn: fetchAllPosts });
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ["admin-posts"],
+    queryFn: fetchAllPosts,
+  });
   const [edit, setEdit] = useState<Partial<Post> | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const save = async () => {
     if (!edit?.title || !edit?.slug) { toast.error("Заголовок и slug обязательны"); return; }
-    const { id: _id, created_at: _ca, updated_at: _ua, ...editRest } = edit as any;
+    setSaving(true);
     const payload: any = {
-      ...editRest,
+      title: edit.title, slug: edit.slug,
+      excerpt: edit.excerpt ?? null, content: edit.content ?? null,
+      keywords: edit.keywords ?? null,
       read_minutes: edit.read_minutes ?? 5,
       sort_order: edit.sort_order ?? 0,
       is_published: edit.is_published ?? false,
-      published_at: edit.is_published && !edit.published_at ? new Date().toISOString() : edit.published_at ?? null,
+      cover_image: edit.cover_image ?? null,
+      published_at: edit.is_published && !edit.published_at
+        ? new Date().toISOString() : edit.published_at ?? null,
     };
     const { error } = edit.id
       ? await supabase.from("posts").update(payload).eq("id", edit.id)
       : await supabase.from("posts").insert(payload);
+    setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Сохранено"); setEdit(null);
+    toast.success("Сохранено");
+    setEdit(null);
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
     qc.invalidateQueries({ queryKey: ["posts"] });
   };
 
   const del = async (id: string) => {
     if (!confirm("Удалить статью?")) return;
-    const { error } = await supabase.from("posts").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    await supabase.from("posts").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold">Блог</h1>
-        <button onClick={() => setEdit({ is_published: false, read_minutes: 5, sort_order: posts.length })} className="btn-gold rounded-lg px-4 py-2 text-sm font-semibold flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Добавить статью
-        </button>
-      </div>
+    <div className="space-y-6">
+      <TitleBar
+        title="Блог"
+        description="Статьи для SEO и контент-маркетинга. Опубликованные статьи доступны на /blog."
+        action={
+          <button
+            onClick={() => setEdit({ is_published: false, read_minutes: 5, sort_order: posts.length })}
+            className="btn-gold inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold"
+          >
+            <Plus className="h-4 w-4" /> Написать статью
+          </button>
+        }
+      />
 
-      <div className="glass rounded-2xl overflow-x-auto">
-        <table className="w-full text-sm min-w-[640px]">
-          <thead className="bg-surface-2 text-left text-xs uppercase tracking-widest text-muted-foreground">
-            <tr><th className="p-4">Заголовок</th><th className="p-4">Slug</th><th className="p-4">Статус</th><th className="p-4 w-32"></th></tr>
-          </thead>
-          <tbody>
-            {posts.map((p) => (
-              <tr key={p.id} className="border-t border-border">
-                <td className="p-4 font-medium">{p.title}</td>
-                <td className="p-4 text-xs text-muted-foreground">{p.slug}</td>
-                <td className="p-4">{p.is_published ? <span className="text-primary">Опубликовано</span> : <span className="text-muted-foreground">Черновик</span>}</td>
-                <td className="p-4 flex gap-2">
-                  <button onClick={() => setEdit(p)} className="p-2 rounded hover:bg-surface-2"><Pencil className="h-4 w-4" /></button>
-                  <button onClick={() => del(p.id)} className="p-2 rounded hover:bg-surface-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
-                </td>
-              </tr>
-            ))}
-            {posts.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Статей пока нет</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <AdminTable columns={["Заголовок", "Slug", "Мин. чтения", "Статус", ""]}>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} cols={5} />)
+        ) : posts.length === 0 ? (
+          <tr>
+            <td colSpan={5}>
+              <EmptyState icon={Newspaper} title="Статей пока нет" description="Напишите первую статью для SEO" />
+            </td>
+          </tr>
+        ) : (
+          posts.map((p) => (
+            <tr key={p.id} className="hover:bg-surface/50 transition-colors">
+              <td className="px-5 py-4">
+                <div className="flex items-center gap-3">
+                  {p.cover_image && (
+                    <img src={p.cover_image} alt="" className="h-10 w-10 rounded-lg object-cover border border-border shrink-0" />
+                  )}
+                  <div className="font-semibold text-sm text-foreground">{p.title}</div>
+                </div>
+              </td>
+              <td className="px-5 py-4">
+                <code className="text-xs bg-surface px-2 py-1 rounded-lg text-muted-foreground">{p.slug}</code>
+              </td>
+              <td className="px-5 py-4 text-sm text-muted-foreground">{p.read_minutes} мин</td>
+              <td className="px-5 py-4">
+                {p.is_published
+                  ? <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Опубликовано</span>
+                  : <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />Черновик</span>
+                }
+              </td>
+              <td className="px-5 py-4">
+                <div className="flex items-center gap-1 justify-end">
+                  <ActionBtn onClick={() => setEdit(p)} icon={Pencil} label="Редактировать" />
+                  <ActionBtn onClick={() => del(p.id)} icon={Trash2} label="Удалить" variant="danger" />
+                </div>
+              </td>
+            </tr>
+          ))
+        )}
+      </AdminTable>
 
       {edit && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur grid place-items-center p-2 sm:p-4 z-50" onClick={() => setEdit(null)}>
-          <div className="glass rounded-2xl p-4 sm:p-6 max-w-3xl w-full max-h-[95vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-display text-2xl font-bold mb-5">{edit.id ? "Редактировать" : "Новая статья"}</h2>
-            <div className="grid gap-3">
-              <F label="Заголовок"><I value={edit.title ?? ""} onChange={(v) => setEdit({ ...edit, title: v })} /></F>
-              <F label="Slug (англ.)"><I value={edit.slug ?? ""} onChange={(v) => setEdit({ ...edit, slug: v })} /></F>
-              <F label="Краткое описание (для превью и SEO)"><textarea value={edit.excerpt ?? ""} onChange={(e) => setEdit({ ...edit, excerpt: e.target.value })} rows={2} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" /></F>
-              <F label="Контент (markdown / простой HTML)"><textarea value={edit.content ?? ""} onChange={(e) => setEdit({ ...edit, content: e.target.value })} rows={14} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full font-mono text-sm focus:border-primary focus:outline-none" /></F>
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Ключевые слова"><I value={edit.keywords ?? ""} onChange={(v) => setEdit({ ...edit, keywords: v })} /></F>
-                <F label="Время чтения (мин)"><I type="number" value={String(edit.read_minutes ?? 5)} onChange={(v) => setEdit({ ...edit, read_minutes: Number(v) })} /></F>
-              </div>
-              <F label="Обложка"><ImageUpload value={edit.cover_image} onChange={(url) => setEdit({ ...edit, cover_image: url })} /></F>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={edit.is_published ?? false} onChange={(e) => setEdit({ ...edit, is_published: e.target.checked })} /> Опубликовано</label>
+        <AdminModal title={edit.id ? "Редактировать статью" : "Новая статья"} onClose={() => setEdit(null)} size="xl">
+          <div className="grid gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Заголовок" required>
+                <Input value={edit.title ?? ""} onChange={(v) => setEdit({ ...edit, title: v })} placeholder="Как выбрать подрядчика для асфальтирования" />
+              </Field>
+              <Field label="Slug" required hint="Только латиница и дефисы">
+                <Input value={edit.slug ?? ""} onChange={(v) => setEdit({ ...edit, slug: v.toLowerCase().replace(/[^a-z0-9-]/g, "-") })} placeholder="kak-vybrat-podryadchika" />
+              </Field>
             </div>
-            <div className="mt-6 flex gap-3 justify-end">
-              <button onClick={() => setEdit(null)} className="px-5 py-2.5 rounded-lg hover:bg-surface-2">Отмена</button>
-              <button onClick={save} className="btn-gold rounded-lg px-5 py-2.5 font-semibold">Сохранить</button>
+
+            <Field label="Краткое описание (excerpt)" hint="До 160 символов — используется для SEO meta description">
+              <Textarea value={edit.excerpt ?? ""} onChange={(v) => setEdit({ ...edit, excerpt: v })} rows={2} placeholder="Рассказываем на что обратить внимание при выборе…" />
+            </Field>
+
+            <Field label="Контент статьи" hint="Поддерживается Markdown и HTML">
+              <Textarea value={edit.content ?? ""} onChange={(v) => setEdit({ ...edit, content: v })} rows={14} mono placeholder="## Введение&#10;&#10;Текст статьи…" />
+            </Field>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Ключевые слова (keywords)" hint="Через запятую">
+                <Input value={edit.keywords ?? ""} onChange={(v) => setEdit({ ...edit, keywords: v })} placeholder="асфальтирование Пермь, укладка асфальта" />
+              </Field>
+              <Field label="Время чтения (мин)">
+                <Input type="number" value={String(edit.read_minutes ?? 5)} onChange={(v) => setEdit({ ...edit, read_minutes: Number(v) })} min={1} max={60} />
+              </Field>
             </div>
+
+            <Field label="Обложка статьи">
+              <ImageUpload value={edit.cover_image} onChange={(url) => setEdit({ ...edit, cover_image: url })} />
+            </Field>
+
+            <CheckboxRow checked={edit.is_published ?? false} onChange={(v) => setEdit({ ...edit, is_published: v })} label="Опубликовать статью" />
           </div>
-        </div>
+          <ModalActions onCancel={() => setEdit(null)} onSave={save} saving={saving} />
+        </AdminModal>
       )}
     </div>
   );
-}
-
-function F({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>{children}</div>;
-}
-function I({ value, onChange, type = "text" }: { value: string; onChange: (v: string) => void; type?: string }) {
-  return <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" />;
 }

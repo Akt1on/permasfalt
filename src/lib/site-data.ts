@@ -1,46 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type Service = {
-  id: string; slug: string; title: string;
-  short_description: string | null; description: string | null;
-  image_url: string | null; icon: string | null;
-  price_from: number | null; price_unit: string | null;
-  sort_order: number; is_active: boolean;
-  // Extended fields stored as JSON columns (migration 20260526000001)
-  hero?: string | null;
-  includes?: string[] | null;
-  faq?: { q: string; a: string }[] | null;
+  id: string; slug: string; title: string; short_description: string | null;
+  description: string | null; image_url: string | null; icon: string | null;
+  price_from: number | null; price_unit: string | null; sort_order: number; is_active: boolean;
 };
-
 export type Project = {
   id: string; slug: string; title: string; category: string | null;
-  description: string | null; cover_image: string | null;
-  location: string | null; area_m2: number | null;
+  description: string | null; cover_image: string | null; location: string | null;
   completed_at: string | null; sort_order: number; is_active: boolean;
 };
-
-export type ProjectPhoto = {
-  id: string; project_id: string; image_url: string;
-  caption: string | null; sort_order: number;
-};
-
+export type ProjectPhoto = { id: string; project_id: string; image_url: string; caption: string | null; sort_order: number };
 export type SiteSettings = Record<string, any>;
 
-export type Review = {
-  id: string; author_name: string; author_role: string | null;
-  author_company: string | null; content: string; rating: number;
-  photo_url: string | null; is_active: boolean; sort_order: number;
-  created_at: string;
-};
-
-export type Post = {
-  id: string; slug: string; title: string; excerpt: string | null;
-  content: string | null; cover_image: string | null; keywords: string | null;
-  read_minutes: number; is_published: boolean; published_at: string | null;
-  sort_order: number; created_at: string; updated_at: string;
-};
-
-// ── Services ──────────────────────────────────────────────────────────────────
 export async function fetchServices(): Promise<Service[]> {
   const { data } = await supabase.from("services").select("*").eq("is_active", true).order("sort_order");
   return (data ?? []) as Service[];
@@ -53,8 +25,6 @@ export async function fetchService(slug: string): Promise<Service | null> {
   const { data } = await supabase.from("services").select("*").eq("slug", slug).maybeSingle();
   return (data as Service) ?? null;
 }
-
-// ── Projects ──────────────────────────────────────────────────────────────────
 export async function fetchProjects(): Promise<Project[]> {
   const { data } = await supabase.from("projects").select("*").eq("is_active", true).order("sort_order");
   return (data ?? []) as Project[];
@@ -71,46 +41,33 @@ export async function fetchProjectPhotos(projectId: string): Promise<ProjectPhot
   const { data } = await supabase.from("project_photos").select("*").eq("project_id", projectId).order("sort_order");
   return (data ?? []) as ProjectPhoto[];
 }
-
-// ── Site Settings ─────────────────────────────────────────────────────────────
-// Supports BOTH schema formats:
-//   New: { key TEXT, value JSONB }  (migration 20260526000001)
-//   Old: { id TEXT, data JSONB }    (original schema)
 export async function fetchSettings(): Promise<SiteSettings> {
-  const { data, error } = await supabase.from("site_settings").select("*");
-  if (error || !data || data.length === 0) return {};
-
+  const { data } = await supabase.from("site_settings").select("*");
   const out: SiteSettings = {};
-  for (const row of data as any[]) {
-    // New format: row has { key, value }
-    if ("key" in row && "value" in row) {
-      out[row.key] = row.value;
-    }
-    // Old format: row has { id, data }
-    else if ("id" in row && "data" in row) {
-      out[row.id] = row.data;
-    }
-  }
+  for (const row of (data ?? []) as { key: string; value: any }[]) out[row.key] = row.value;
   return out;
 }
-
-// ── Pricing ───────────────────────────────────────────────────────────────────
 export async function fetchPricing(serviceId: string) {
   const { data } = await supabase.from("pricing_items").select("*").eq("service_id", serviceId).order("sort_order");
   return data ?? [];
 }
 
-// ── Reviews ───────────────────────────────────────────────────────────────────
+export type Review = {
+  id: string; author_name: string; author_role: string | null;
+  content: string; rating: number; photo_url: string | null;
+  is_active: boolean; sort_order: number;
+};
 export async function fetchReviews(): Promise<Review[]> {
   const { data } = await supabase.from("reviews").select("*").eq("is_active", true).order("sort_order");
   return (data ?? []) as Review[];
 }
-export async function fetchAllReviews(): Promise<Review[]> {
-  const { data } = await supabase.from("reviews").select("*").order("sort_order");
-  return (data ?? []) as Review[];
-}
 
-// ── Posts ─────────────────────────────────────────────────────────────────────
+export type Post = {
+  id: string; slug: string; title: string; excerpt: string | null;
+  content: string | null; cover_image: string | null; keywords: string | null;
+  read_minutes: number; is_published: boolean; published_at: string | null;
+  sort_order: number; created_at: string; updated_at: string;
+};
 export async function fetchPosts(): Promise<Post[]> {
   const { data } = await supabase.from("posts").select("*").eq("is_published", true).order("published_at", { ascending: false });
   return (data ?? []) as Post[];

@@ -1,11 +1,6 @@
-import { m } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-/**
- * Standard section wrapper with scroll-triggered fade-in.
- * NOTE: Uses `m.section` — relies on a LazyMotion provider higher up in the tree.
- * The PageTransition component provides LazyMotion for all page content.
- */
 export function Section({
   id,
   eyebrow,
@@ -24,7 +19,7 @@ export function Section({
   dark?: boolean;
 }) {
   return (
-    <m.section
+    <motion.section
       id={id}
       className={`py-20 md:py-28 ${dark ? "bg-[oklch(0.20_0.008_60)]" : "bg-background"} ${className}`}
       initial={{ opacity: 0, y: 20 }}
@@ -60,6 +55,6 @@ export function Section({
         )}
         {children}
       </div>
-    </m.section>
+    </motion.section>
   );
 }

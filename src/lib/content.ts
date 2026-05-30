@@ -1,8 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentType } from "react";
 import {
-  Construction, Wrench, LayoutGrid, Shovel, Trash2,
-  Truck, Hammer, Snowflake, PackageOpen, Trees,
+  Construction,
+  Wrench,
+  LayoutGrid,
+  Shovel,
+  Trash2,
+  Truck,
+  Hammer,
+  Snowflake,
+  PackageOpen,
+  Trees,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SERVICES as FALLBACK_SERVICES } from "@/data/services";
@@ -84,156 +92,119 @@ export const getServiceIcon = (
   typeof icon === "string" ? SERVICE_ICON_MAP[icon] ?? Construction : icon;
 
 // ---------- Row mappers ----------
-// Maps DB columns → app types (handles both old and new column names)
 
-function mapService(row: any): Service {
+type ServiceRow = {
+  id: string;
+  slug: string;
+  title: string;
+  short: string;
+  price_from: string;
+  icon: string;
+  hero: string;
+  description: string;
+  includes: unknown;
+  faq: unknown;
+  image_url: string | null;
+  position: number;
+};
+
+type PriceRow = {
+  id: string;
+  category_id: string;
+  category_title: string;
+  name: string;
+  price: string;
+  position: number;
+};
+
+type GalleryRow = {
+  id: string;
+  src: string;
+  title: string;
+  category: string;
+  category_label: string;
+  year: number;
+  position: number;
+};
+
+function mapService(row: ServiceRow): Service {
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    // DB может иметь short или short_description
-    short: row.short ?? row.short_description ?? row.title,
-    // DB может иметь price_from как число или текст
-    priceFrom: row.price_from != null
-      ? (typeof row.price_from === "number"
-        ? `от ${row.price_from} ₽/${row.price_unit ?? "м²"}`
-        : String(row.price_from))
-      : "по запросу",
+    short: row.short,
+    priceFrom: row.price_from,
     icon: (row.icon as ServiceIconKey) ?? "construction",
-    hero: row.hero ?? row.description ?? "",
-    description: row.description ?? "",
-    includes: Array.isArray(row.includes) ? row.includes as string[] : [],
-    faq: Array.isArray(row.faq) ? row.faq as { q: string; a: string }[] : [],
-    imageUrl: row.image_url ?? null,
-    // DB может иметь position или sort_order
-    order: row.position ?? row.sort_order ?? 0,
+    hero: row.hero,
+    description: row.description,
+    includes: Array.isArray(row.includes) ? (row.includes as string[]) : [],
+    faq: Array.isArray(row.faq) ? (row.faq as { q: string; a: string }[]) : [],
+    imageUrl: row.image_url,
+    order: row.position ?? 0,
   };
 }
 
-function mapPrice(row: any): PriceItem {
+function mapPrice(row: PriceRow): PriceItem {
   return {
     id: row.id,
-    category_id: row.category_id ?? row.category ?? "general",
-    category_title: row.category_title ?? row.category ?? "Общее",
+    category_id: row.category_id,
+    category_title: row.category_title,
     name: row.name,
-    price: row.price != null ? String(row.price) : "",
-    order: row.position ?? row.sort_order ?? 0,
+    price: row.price,
+    order: row.position ?? 0,
   };
 }
 
-function mapGallery(row: any): GalleryItem {
+function mapGallery(row: GalleryRow): GalleryItem {
   return {
     id: row.id,
-    src: row.src ?? row.image_url ?? "/placeholder.svg",
-    title: row.title ?? "",
-    category: row.category ?? "asfalt",
-    category_label: row.category_label ?? row.category ?? "Асфальтирование",
-    year: row.year ?? new Date().getFullYear(),
-    order: row.position ?? row.sort_order ?? 0,
+    src: row.src,
+    title: row.title,
+    category: row.category,
+    category_label: row.category_label,
+    year: row.year,
+    order: row.position ?? 0,
   };
 }
 
-// ---------- Public fetchers ----------
+// ---------- Public fetchers (RLS allows anon SELECT) ----------
 
 export async function fetchServices(): Promise<Service[]> {
   const { data, error } = await supabase
     .from("services")
     .select("*")
-    .order("sort_order", { ascending: true });
-  // Если sort_order не работает — пробуем без order
-  if (error) {
-    const { data: d2 } = await supabase.from("services").select("*");
-    return (d2 ?? []).map(mapService);
-  }
-  return (data ?? []).map(mapService);
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((row) => mapService(row as ServiceRow));
 }
 
 export async function fetchPriceItems(): Promise<PriceItem[]> {
-  // Пробуем сначала таблицу price_items, потом pricing_items
   const { data, error } = await supabase
     .from("price_items")
     .select("*")
-    .order("category_title", { ascending: true });
-
-  if (error || !data || data.length === 0) {
-    // Fallback на pricing_items
-    const { data: d2 } = await supabase
-      .from("pricing_items")
-      .select("*, services(title)")
-      .order("sort_order", { ascending: true });
-    if (d2 && d2.length > 0) {
-      return d2.map((row: any) => ({
-        id: row.id,
-        category_id: row.service_id ?? "general",
-        category_title: (row.services as any)?.title ?? "Общее",
-        name: row.name,
-        price: row.price != null ? `${row.price} ₽/${row.unit ?? "м²"}` : "",
-        order: row.sort_order ?? 0,
-      }));
-    }
-    return [];
-  }
-  return data.map(mapPrice);
+    .order("category_title", { ascending: true })
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((row) => mapPrice(row as PriceRow));
 }
 
 export async function fetchGalleryItems(): Promise<GalleryItem[]> {
-  // Пробуем gallery_items, потом projects как fallback
   const { data, error } = await supabase
     .from("gallery_items")
     .select("*")
     .order("position", { ascending: true });
-
-  if (error || !data || data.length === 0) {
-    // Fallback на projects
-    const { data: d2 } = await supabase
-      .from("projects")
-      .select("*")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-    if (d2 && d2.length > 0) {
-      return d2.map((row: any) => ({
-        id: row.id,
-        src: row.cover_image ?? "/placeholder.svg",
-        title: row.title,
-        category: row.category ?? "asfalt",
-        category_label: row.category ?? "Асфальтирование",
-        year: row.completed_at ? new Date(row.completed_at).getFullYear() : 2024,
-        order: row.sort_order ?? 0,
-      }));
-    }
-    return [];
-  }
-  return data.map(mapGallery);
+  if (error) throw error;
+  return (data ?? []).map((row) => mapGallery(row as GalleryRow));
 }
 
 export async function fetchSiteSettings(): Promise<SiteSettings> {
-  // Поддерживаем оба формата: {id,data} и {key,value}
   const { data, error } = await supabase
     .from("site_settings")
-    .select("*");
-
-  if (error || !data || data.length === 0) {
-    return FALLBACK_SITE as SiteSettings;
-  }
-
-  // Формат {id:'main', data:{...}}
-  const mainRow = data.find((r: any) => r.id === "main");
-  if (mainRow && mainRow.data) {
-    return mainRow.data as SiteSettings;
-  }
-
-  // Формат {key:'contacts', value:{...}}
-  const out: Record<string, any> = {};
-  for (const row of data as any[]) {
-    if ("key" in row && "value" in row) {
-      out[row.key] = row.value;
-    }
-  }
-  if (Object.keys(out).length > 0) {
-    return { ...FALLBACK_SITE, ...out.contacts, ...out } as SiteSettings;
-  }
-
-  return FALLBACK_SITE as SiteSettings;
+    .select("data")
+    .eq("id", "main")
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.data as SiteSettings) ?? (FALLBACK_SITE as SiteSettings);
 }
 
 // ---------- React Query hooks ----------
@@ -291,7 +262,7 @@ export function useSiteSettings() {
   });
 }
 
-// ---------- Grouping helpers ----------
+// ---------- Grouping helpers (used by UI) ----------
 
 export type PriceCategory = {
   category_id: string;
@@ -328,7 +299,7 @@ export function groupGalleryCategories(items: GalleryItem[]) {
   return Array.from(categories.values());
 }
 
-// ---------- Admin operations ----------
+// ---------- Admin operations (RLS gates writes via has_role('admin')) ----------
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (v: string) => UUID_RE.test(v);
@@ -346,15 +317,15 @@ export async function saveServicesDiff(draft: Service[], original: Service[]) {
     const row = {
       slug: s.slug,
       title: s.title,
-      short_description: s.short,
-      price_from: s.priceFrom ? parseFloat(s.priceFrom.replace(/[^\d.]/g, "")) || null : null,
+      short: s.short,
+      price_from: s.priceFrom,
       icon: typeof s.icon === "string" ? s.icon : "construction",
+      hero: s.hero,
       description: s.description,
       includes: s.includes,
       faq: s.faq,
       image_url: s.imageUrl ?? null,
-      sort_order: s.order,
-      is_active: true,
+      position: s.order,
     };
     if (isUuid(s.id)) {
       const { error } = await supabase.from("services").update(row).eq("id", s.id);
@@ -422,17 +393,10 @@ export async function saveGalleryDiff(draft: GalleryItem[], original: GalleryIte
 }
 
 export async function saveSiteSettings(settings: SiteSettings) {
-  // Пробуем оба формата
   const { error } = await supabase
     .from("site_settings")
     .upsert({ id: "main", data: settings }, { onConflict: "id" });
-  if (error) {
-    // Fallback: key/value формат
-    await supabase.from("site_settings").upsert(
-      { key: "main", value: settings },
-      { onConflict: "key" }
-    );
-  }
+  if (error) throw error;
 }
 
 export async function uploadSiteImage(file: File): Promise<string> {
@@ -448,13 +412,13 @@ export async function uploadSiteImage(file: File): Promise<string> {
   return data.publicUrl;
 }
 
-export async function checkIsAdmin(_userId: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("is_admin");
-  if (error) {
-    const { data: roleData } = await supabase
-      .from("user_roles").select("role")
-      .eq("user_id", _userId).eq("role", "admin").maybeSingle();
-    return !!roleData;
-  }
-  return data === true;
+export async function checkIsAdmin(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) return false;
+  return !!data;
 }

@@ -6,6 +6,8 @@ import {
   Newspaper, Settings, ArrowRight, Phone, Clock, CheckCircle2,
 } from "lucide-react";
 import { StatCard, StatusPill } from "@/components/admin/ui";
+import { format, formatDistanceToNow } from "date-fns";
+import { ru } from "date-fns/locale";
 
 function useOverviewData() {
   return useQuery({
@@ -143,9 +145,10 @@ export function AdminOverview() {
                 </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                   <Clock className="h-3 w-3" />
-                  {new Date(lead.created_at).toLocaleString("ru-RU", {
-                    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-                  })}
+                  {format(new Date(lead.created_at), "d MMM, HH:mm", { locale: ru })}
+                  <span className="block text-[9px] text-muted-foreground/50">
+                    {formatDistanceToNow(new Date(lead.created_at), { addSuffix: true, locale: ru })}
+                  </span>
                 </div>
               </div>
             ))}

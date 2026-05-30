@@ -1,7 +1,6 @@
-import { SITE } from "@/data/site";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LazyMotion, domAnimation, m  } from "framer-motion";
+import { motion } from "framer-motion";
 import { Award, Shield, Truck, Users, CheckCircle2, Phone } from "lucide-react";
 import { fetchSettings } from "@/lib/site-data";
 import { CallbackForm } from "@/components/site/CallbackForm";
@@ -59,7 +58,7 @@ const FACTS = [
 function AboutPage() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
   const about = settings?.about ?? {};
-  const phone = settings?.contacts?.phone ?? SITE.phone;
+  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
 
   return (
     <>
@@ -67,7 +66,7 @@ function AboutPage() {
       <section className="pt-32 pb-16 bg-[oklch(0.20_0.008_60)]">
         <div className="h-1" style={{ background: "var(--gradient-primary)" }} />
         <div className="container-x pt-12">
-          <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
             <div className="chip chip-primary mb-4">О нас</div>
             <h1 className="font-display text-5xl md:text-7xl font-bold text-white leading-tight">
               {about.title ?? (
@@ -79,7 +78,7 @@ function AboutPage() {
             <p className="mt-6 text-lg text-white/60 max-w-2xl leading-relaxed">
               {about.text ?? "Компания Пермь Асфальт 59 специализируется на асфальтировании и комплексном благоустройстве территорий в Перми и Пермском крае. Собственная спецтехника, опытные бригады, официальный договор."}
             </p>
-          </m.div>
+          </motion.div>
         </div>
       </section>
 
@@ -93,14 +92,14 @@ function AboutPage() {
               { value: "3",    label: "года гарантии" },
               { value: "12",   label: "городов края" },
             ]).map((s: any, i: number) => (
-              <m.div key={i}
+              <motion.div key={i}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }}
                 className="text-center p-6 rounded-2xl border border-border bg-surface hover:border-primary/30 transition card-accent-top"
               >
                 <div className="stat-number">{s.value}</div>
                 <div className="mt-2 text-sm text-muted-foreground uppercase tracking-widest">{s.label}</div>
-              </m.div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -117,7 +116,7 @@ function AboutPage() {
             {VALUES.map((v, i) => {
               const Icon = v.icon;
               return (
-                <m.div key={i}
+                <motion.div key={i}
                   initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ duration: 0.45, delay: i * 0.1 }}
                   className="bg-white rounded-2xl border border-border p-7 hover:border-primary/40 hover:shadow-[var(--shadow-elevated)] transition-all card-accent-top"
@@ -127,7 +126,7 @@ function AboutPage() {
                   </div>
                   <div className="font-display text-xl font-bold text-foreground mb-3">{v.title}</div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
-                </m.div>
+                </motion.div>
               );
             })}
           </div>
@@ -143,14 +142,14 @@ function AboutPage() {
               <h2 className="font-display text-4xl font-bold text-white mb-8">ВАЖНО ЗНАТЬ</h2>
               <ul className="space-y-4">
                 {FACTS.map((f, i) => (
-                  <m.li key={i}
+                  <motion.li key={i}
                     initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }} transition={{ duration: 0.35, delay: i * 0.07 }}
                     className="flex items-start gap-3"
                   >
                     <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                     <span className="text-white/75 text-[15px] leading-relaxed">{f}</span>
-                  </m.li>
+                  </motion.li>
                 ))}
               </ul>
             </div>

@@ -118,12 +118,12 @@ function PostPage() {
               <Link to="/" itemProp="item" className="hover:text-primary transition"><span itemProp="name">Главная</span></Link>
               <meta itemProp="position" content="1" />
             </li>
-            <li aria-hidden="true" className="text-border select-none">/</li>
+            <span>/</span>
             <li itemScope itemType="https://schema.org/ListItem" itemProp="itemListElement">
               <Link to="/blog" itemProp="item" className="hover:text-primary transition"><span itemProp="name">Блог</span></Link>
               <meta itemProp="position" content="2" />
             </li>
-            <li aria-hidden="true" className="text-border select-none">/</li>
+            <span>/</span>
             <li itemScope itemType="https://schema.org/ListItem" itemProp="itemListElement">
               <span itemProp="name" className="text-foreground truncate max-w-[200px]">{p.title}</span>
               <meta itemProp="position" content="3" />

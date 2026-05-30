@@ -1,4 +1,3 @@
-import { SITE } from "@/data/site";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Check, MapPin, ArrowRight, Shield, Truck, Clock, Award } from "lucide-react";
@@ -163,8 +162,8 @@ export const Route = createFileRoute("/goroda/$city")({
   head: ({ loaderData, params }) => {
     const c = loaderData?.cityData;
     if (!c) return { meta: [] };
-    const title = `Асфальтирование в ${c.nameRod} — цены от 300 ₽/м², выезд бесплатно | Пермь Асфальт 59`;
-    const description = `Асфальтирование в ${c.nameRod}${c.distance ? ` (${c.distance})` : ""} от 300 ₽/м². ${c.services.slice(0, 3).join(", ")}. Бесплатный выезд замерщика, гарантия 3 года, договор. Звоните: +7 (342) 277-77-10.`;
+    const title = `Асфальтирование в ${c.nameRod} — цены от 1500 ₽/м², выезд бесплатно | Пермь Асфальт 59`;
+    const description = `Асфальтирование в ${c.nameRod}${c.distance ? ` (${c.distance})` : ""} от 1500 ₽/м². ${c.services.slice(0, 3).join(", ")}. Бесплатный выезд замерщика, гарантия 3 года, договор. Звоните: +7 (342) 277-77-10.`;
     const url = `${BASE}/goroda/${params.city}`;
     return {
       meta: [
@@ -209,7 +208,7 @@ export const Route = createFileRoute("/goroda/$city")({
             name: "Пермь Асфальт 59",
             description: `Асфальтирование и благоустройство в ${c.nameRod}`,
             url: BASE,
-            telephone: SITE.phoneRaw,
+            telephone: "+73422777710",
             areaServed: { "@type": "City", name: c.name },
           }),
         },
@@ -223,7 +222,7 @@ function CityPage() {
   const { cityData: c, citySlug } = Route.useLoaderData();
   const { data: services = [] } = useQuery({ queryKey: ["services"], queryFn: fetchServices, staleTime: 5 * 60 * 1000 });
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
-  const phone = settings?.contacts?.phone ?? SITE.phone;
+  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
   const phoneRaw = phone.replace(/[^\d+]/g, "");
 
   return (
@@ -240,13 +239,13 @@ function CityPage() {
               <span itemProp="name">Главная</span>
               <meta itemProp="position" content="1" />
             </Link>
-            <li aria-hidden="true" className="text-border select-none">/</li>
+            <span>/</span>
             <Link to="/goroda" className="hover:text-white/70 transition"
               itemProp="item" itemScope itemType="https://schema.org/WebPage">
               <span itemProp="name">Города</span>
               <meta itemProp="position" content="2" />
             </Link>
-            <li aria-hidden="true" className="text-border select-none">/</li>
+            <span>/</span>
             <span className="text-white/70" itemProp="item" itemScope itemType="https://schema.org/WebPage">
               <span itemProp="name">{c.name}</span>
               <meta itemProp="position" content="3" />

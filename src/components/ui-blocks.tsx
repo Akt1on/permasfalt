@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LazyMotion, domAnimation, useInView, m, useMotionValue, animate  } from "framer-motion";
+import { useInView, motion, useMotionValue, animate } from "framer-motion";
 
 export function Counter({
   to,
@@ -43,7 +43,7 @@ export function FadeInUp({
   className?: string;
 }) {
   return (
-    <m.div
+    <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
@@ -51,7 +51,7 @@ export function FadeInUp({
       className={className}
     >
       {children}
-    </m.div>
+    </motion.div>
   );
 }
 

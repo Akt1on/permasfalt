@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { LazyMotion, domAnimation, m as motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Calculator as CalcIcon, Sparkles } from "lucide-react";
 import { IMaskInput } from "react-imask";
+import { supabase } from "@/integrations/supabase/client";
+import { notifyLead } from "@/lib/notify-lead";
 import { toast } from "sonner";
 
 type Answer = { type: string; coverage: string; area: number; timing: string };
@@ -48,20 +50,18 @@ export function Quiz() {
       `Сроки: ${TIMING.find((t) => t.id === a.timing)?.label}`,
       `Расчётная стоимость: ~${price.toLocaleString("ru-RU")} ₽`,
     ].join(" • ");
-    try {
-      const res = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name || null, phone, message: summary, source: "quiz" }),
-      });
-      if (!res.ok) throw new Error("server");
-      setDone(true);
-      toast.success("Заявка принята!");
-    } catch {
-      toast.error("Не удалось отправить. Попробуйте позже.");
-    } finally {
-      setSubmitting(false);
-    }
+    const { error } = await supabase.from("leads").insert({ name: name || null, phone, message: summary, source: "quiz" });
+    setSubmitting(false);
+    if (error) { toast.error("Не удалось отправить. Попробуйте позже."); return; }
+    notifyLead({
+      name: name || null,
+      phone,
+      message: summary,
+      source: "quiz",
+      service: TYPES.find((t) => t.id === a.type)?.label ?? null,
+    }).catch(() => {});
+    setDone(true);
+    toast.success("Заявка принята!");
   };
 
   const next = () => setStep((s) => Math.min(s + 1, totalSteps));
@@ -94,7 +94,7 @@ export function Quiz() {
         <div className="bg-white rounded-3xl shadow-[0_24px_80px_-20px_oklch(0_0_0/0.4)] overflow-hidden">
           {/* Прогресс-бар */}
           <div className="h-1.5 bg-surface">
-            <m.div
+            <motion.div
               className="h-full"
               style={{ background: "var(--gradient-primary)" }}
               animate={{ width: `${((step) / totalSteps) * 100}%` }}
@@ -104,7 +104,7 @@ export function Quiz() {
 
           <div className="p-8 md:p-12">
             {done ? (
-              <m.div
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-10"
@@ -120,10 +120,10 @@ export function Quiz() {
                   </span>
                   <span className="text-sm text-muted-foreground">предварительно</span>
                 </div>
-              </m.div>
+              </motion.div>
             ) : (
               <AnimatePresence mode="wait">
-                <m.div
+                <motion.div
                   key={step}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -295,7 +295,7 @@ export function Quiz() {
                       </button>
                     )}
                   </div>
-                </m.div>
+                </motion.div>
               </AnimatePresence>
             )}
           </div>

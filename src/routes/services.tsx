@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LazyMotion, domAnimation, m  } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, Search } from "lucide-react";
 import { useState } from "react";
 import { fetchServices } from "@/lib/site-data";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/services")({
   head: () => ({
     meta: [
       { title: "Услуги по асфальтированию в Перми — полный прайс | Пермь Асфальт 59" },
-      { name: "description", content: "Полный список услуг: асфальтирование от 300 ₽/м², тротуарная плитка, демонтаж, земляные работы, аренда спецтехники, вывоз мусора в Перми. Договор, гарантия 3 года." },
+      { name: "description", content: "Полный список услуг: асфальтирование от 1500 ₽/м², тротуарная плитка, демонтаж, земляные работы, аренда спецтехники, вывоз мусора в Перми. Договор, гарантия 3 года." },
       { name: "keywords", content: "услуги асфальтирование Пермь, укладка асфальта Пермь цена, тротуарная плитка Пермь, демонтаж асфальта Пермь, земляные работы Пермь, аренда спецтехники Пермь" },
       { property: "og:title", content: "Услуги по асфальтированию в Перми | Пермь Асфальт 59" },
       { property: "og:description", content: "Асфальтирование, тротуарная плитка, демонтаж, земляные работы и спецтехника в Перми. Бесплатный выезд, гарантия 3 года." },
@@ -58,7 +58,7 @@ function ServicesIndex() {
       <section className="pt-32 pb-16 bg-[oklch(0.20_0.008_60)]">
         <div className="h-1" style={{ background: "var(--gradient-primary)" }} />
         <div className="container-x pt-12">
-          <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
             <div className="chip chip-primary mb-4">Услуги</div>
             <h1 className="font-display text-5xl md:text-7xl font-bold text-white leading-none">
               КОМПЛЕКСНОЕ<br />
@@ -67,7 +67,7 @@ function ServicesIndex() {
             <p className="mt-6 text-lg text-white/60 max-w-2xl leading-relaxed">
               Выберите направление работ: асфальтирование, тротуарная плитка, демонтаж, аренда спецтехники и другие услуги под ключ в Перми.
             </p>
-          </m.div>
+          </motion.div>
         </div>
       </section>
 
@@ -104,7 +104,7 @@ function ServicesIndex() {
           {/* Сетка карточек */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((s, i) => (
-              <m.div key={s.id}
+              <motion.div key={s.id}
                 initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.45, delay: i * 0.05 }}
               >
@@ -154,7 +154,7 @@ function ServicesIndex() {
                     </div>
                   </div>
                 </Link>
-              </m.div>
+              </motion.div>
             ))}
           </div>
 

@@ -2,50 +2,54 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllReviews, type Review } from "@/lib/site-data";
 import { ImageUpload } from "@/components/admin/ImageUpload";
-import { Pencil, Trash2, Plus, Star, ChevronUp, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, Plus, Star as StarIcon } from "lucide-react";
 import { toast } from "sonner";
+import {
+  TitleBar, AdminModal, ModalActions, Field, Input, Textarea,
+  CheckboxRow, AdminTable, SkeletonRow, EmptyState, ActionBtn,
+} from "@/components/admin/ui";
 
 export const Route = createFileRoute("/admin/reviews")({ component: AdminReviews });
 
-type Review = {
-  id: string;
-  author_name: string;
-  author_role: string | null;
-  author_company: string | null;
-  content: string;
-  rating: number;
-  photo_url: string | null;
-  is_active: boolean;
-  sort_order: number;
-  created_at: string;
-};
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <StarIcon key={n} className={`h-3.5 w-3.5 ${n <= rating ? "fill-primary text-primary" : "text-border"}`} />
+      ))}
+    </div>
+  );
+}
 
 function AdminReviews() {
   const qc = useQueryClient();
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["admin-reviews"],
-    queryFn: async () =>
-      ((await supabase.from("reviews").select("*").order("sort_order")).data ?? []) as Review[],
+    queryFn: fetchAllReviews,
   });
   const [edit, setEdit] = useState<Partial<Review> | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const save = async () => {
-    if (!edit?.author_name?.trim()) { toast.error("Имя автора обязательно"); return; }
-    if (!edit?.content?.trim())     { toast.error("Текст отзыва обязателен"); return; }
-
-    const { id, created_at, ...rest } = edit as any;
-    const payload = {
-      ...rest,
-      rating:     Math.min(5, Math.max(1, edit.rating ?? 5)),
-      is_active:  edit.is_active ?? true,
-      sort_order: edit.sort_order ?? 0,
+    if (!edit?.author || !edit?.text) { toast.error("Автор и текст обязательны"); return; }
+    setSaving(true);
+    const payload: any = {
+      author: edit.author,
+      text: edit.text,
+      rating: edit.rating ?? 5,
+      avatar_url: edit.avatar_url ?? null,
+      source: edit.source ?? null,
+      author_company: (edit as any).author_company ?? null,
+      author_role: (edit as any).author_role ?? null,
+      sort_order: edit.sort_order ?? reviews.length,
+      is_active: edit.is_active ?? true,
     };
-
     const { error } = edit.id
       ? await supabase.from("reviews").update(payload).eq("id", edit.id)
       : await supabase.from("reviews").insert(payload);
-
+    setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Сохранено");
     setEdit(null);
@@ -55,147 +59,130 @@ function AdminReviews() {
 
   const del = async (id: string) => {
     if (!confirm("Удалить отзыв?")) return;
-    const { error } = await supabase.from("reviews").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Удалено");
-    qc.invalidateQueries({ queryKey: ["admin-reviews"] });
-    qc.invalidateQueries({ queryKey: ["reviews"] });
-  };
-
-  const toggleActive = async (r: Review) => {
-    await supabase.from("reviews").update({ is_active: !r.is_active }).eq("id", r.id);
-    qc.invalidateQueries({ queryKey: ["admin-reviews"] });
-  };
-
-  const moveOrder = async (idx: number, dir: -1 | 1) => {
-    const next = idx + dir;
-    if (next < 0 || next >= reviews.length) return;
-    const a = reviews[idx];
-    const b = reviews[next];
-    await Promise.all([
-      supabase.from("reviews").update({ sort_order: b.sort_order }).eq("id", a.id),
-      supabase.from("reviews").update({ sort_order: a.sort_order }).eq("id", b.id),
-    ]);
+    await supabase.from("reviews").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["admin-reviews"] });
   };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold">Отзывы</h1>
-        <button
-          onClick={() => setEdit({ rating: 5, is_active: true, sort_order: reviews.length })}
-          className="btn-gold rounded-lg px-4 py-2 text-sm font-semibold flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> Добавить
-        </button>
-      </div>
+    <div className="space-y-6">
+      <TitleBar
+        title="Отзывы"
+        description="Управление клиентскими отзывами на главной странице."
+        action={
+          <button
+            onClick={() => setEdit({ rating: 5, is_active: true, sort_order: reviews.length })}
+            className="btn-gold inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold"
+          >
+            <Plus className="h-4 w-4" /> Добавить отзыв
+          </button>
+        }
+      />
 
-      {isLoading ? (
-        <div className="text-muted-foreground text-sm p-8 text-center">Загрузка…</div>
-      ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {reviews.map((r, idx) => (
-            <div key={r.id} className={`glass rounded-2xl p-5 ${!r.is_active ? "opacity-60" : ""}`}>
-              <div className="flex items-start gap-3">
-                {r.photo_url && (
-                  <img src={r.photo_url} alt={r.author_name} className="h-10 w-10 rounded-full object-cover flex-shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 text-primary mb-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-current" : "opacity-20"}`} />
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-3">{r.content}</p>
-                  <div className="mt-2 font-semibold text-sm">{r.author_name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {[r.author_role, r.author_company].filter(Boolean).join(" · ")}
+      <AdminTable columns={["Автор", "Рейтинг", "Отзыв", "Активен", ""]}>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} cols={5} />)
+        ) : reviews.length === 0 ? (
+          <tr>
+            <td colSpan={5}>
+              <EmptyState icon={StarIcon} title="Отзывов пока нет" description="Добавьте первый отзыв" />
+            </td>
+          </tr>
+        ) : (
+          reviews.map((r) => (
+            <tr key={r.id} className="hover:bg-surface/50 transition-colors">
+              <td className="px-5 py-4">
+                <div className="flex items-center gap-3">
+                  {r.avatar_url ? (
+                    <img src={r.avatar_url} alt={r.author} className="h-9 w-9 rounded-full object-cover border border-border" />
+                  ) : (
+                    <div className="h-9 w-9 rounded-full bg-primary/10 grid place-items-center text-primary font-bold text-sm shrink-0">
+                      {r.author?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-semibold text-sm text-foreground">{r.author}</div>
+                    {((r as any).author_role || (r as any).author_company) && (
+                      <div className="text-xs text-primary/80 font-medium">
+                        {[(r as any).author_role, (r as any).author_company].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
+                    {r.source && <div className="text-xs text-muted-foreground">{r.source}</div>}
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 flex items-center gap-1">
-                <button onClick={() => moveOrder(idx, -1)} disabled={idx === 0}
-                  className="p-1.5 rounded hover:bg-surface-2 disabled:opacity-30"><ChevronUp className="h-3.5 w-3.5" /></button>
-                <button onClick={() => moveOrder(idx, 1)} disabled={idx === reviews.length - 1}
-                  className="p-1.5 rounded hover:bg-surface-2 disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
-                <button onClick={() => setEdit(r)} className="p-1.5 rounded hover:bg-surface-2"><Pencil className="h-3.5 w-3.5" /></button>
-                <button onClick={() => del(r.id)} className="p-1.5 rounded hover:bg-surface-2 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
-                <button onClick={() => toggleActive(r)} className={`ml-auto text-[11px] px-2.5 py-1 rounded-full font-medium ${r.is_active ? "bg-emerald-500/15 text-emerald-400" : "bg-muted/40 text-muted-foreground"}`}>
-                  {r.is_active ? "Активен" : "Скрыт"}
-                </button>
-              </div>
-            </div>
-          ))}
-          {reviews.length === 0 && (
-            <div className="col-span-full glass rounded-2xl p-12 text-center text-muted-foreground">
-              Отзывов пока нет. Добавьте первый!
-            </div>
-          )}
-        </div>
-      )}
+              </td>
+              <td className="px-5 py-4"><Stars rating={r.rating ?? 5} /></td>
+              <td className="px-5 py-4 max-w-sm">
+                <p className="text-sm text-muted-foreground line-clamp-2">{r.text}</p>
+              </td>
+              <td className="px-5 py-4">
+                <span className={`inline-block h-2 w-2 rounded-full ${r.is_active ? "bg-emerald-500" : "bg-muted-foreground"}`} />
+              </td>
+              <td className="px-5 py-4">
+                <div className="flex items-center gap-1 justify-end">
+                  <ActionBtn onClick={() => setEdit(r)} icon={Pencil} label="Редактировать" />
+                  <ActionBtn onClick={() => del(r.id)} icon={Trash2} label="Удалить" variant="danger" />
+                </div>
+              </td>
+            </tr>
+          ))
+        )}
+      </AdminTable>
 
       {edit && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur grid place-items-center p-2 sm:p-4" onClick={() => setEdit(null)}>
-          <div className="glass rounded-2xl p-4 sm:p-6 max-w-xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-display text-2xl font-bold mb-5">{edit.id ? "Редактировать отзыв" : "Новый отзыв"}</h2>
-            <div className="grid gap-3">
-              <Field label="Имя автора *">
-                <Inp value={edit.author_name ?? ""} onChange={(v) => setEdit({ ...edit, author_name: v })} placeholder="Александр Иванов" />
+        <AdminModal
+          title={edit.id ? "Редактировать отзыв" : "Новый отзыв"}
+          onClose={() => setEdit(null)}
+        >
+          <div className="grid gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Имя и фамилия" required>
+                <Input value={edit.author ?? ""} onChange={(v) => setEdit({ ...edit, author: v })} placeholder="Иван Иванов" />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Должность">
-                  <Inp value={edit.author_role ?? ""} onChange={(v) => setEdit({ ...edit, author_role: v })} placeholder="Директор" />
-                </Field>
-                <Field label="Компания">
-                  <Inp value={edit.author_company ?? ""} onChange={(v) => setEdit({ ...edit, author_company: v })} placeholder='ООО "СтройИнвест"' />
-                </Field>
+              <Field label="Источник" hint="Яндекс, Google, 2GIS, лично…">
+                <Input value={edit.source ?? ""} onChange={(v) => setEdit({ ...edit, source: v })} placeholder="Яндекс.Карты" />
+              </Field>
+              <Field label="Компания" hint="Необязательно — для B2B отзывов">
+                <Input value={(edit as any).author_company ?? ""} onChange={(v) => setEdit({ ...edit, author_company: v } as any)} placeholder='ООО "СтройИнвест"' />
+              </Field>
+              <Field label="Должность" hint="Необязательно">
+                <Input value={(edit as any).author_role ?? ""} onChange={(v) => setEdit({ ...edit, author_role: v } as any)} placeholder="Директор по строительству" />
+              </Field>
+            </div>
+
+            <Field label="Рейтинг">
+              <div className="flex gap-2 mt-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setEdit({ ...edit, rating: n })}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <StarIcon className={`h-7 w-7 transition-colors ${n <= (edit.rating ?? 5) ? "fill-primary text-primary" : "text-border hover:text-primary/50"}`} />
+                  </button>
+                ))}
               </div>
-              <Field label="Текст отзыва *">
-                <textarea
-                  value={edit.content ?? ""}
-                  onChange={(e) => setEdit({ ...edit, content: e.target.value })}
-                  rows={5}
-                  className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none resize-none"
-                  placeholder="Текст отзыва…"
-                />
+            </Field>
+
+            <Field label="Текст отзыва" required>
+              <Textarea value={edit.text ?? ""} onChange={(v) => setEdit({ ...edit, text: v })} rows={4} placeholder="Отличная работа, приехали вовремя…" />
+            </Field>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Порядок сортировки">
+                <Input type="number" value={String(edit.sort_order ?? 0)} onChange={(v) => setEdit({ ...edit, sort_order: Number(v) })} />
               </Field>
-              <Field label="Оценка (1–5)">
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setEdit({ ...edit, rating: v })}
-                      className={`p-2 rounded-lg transition ${v <= (edit.rating ?? 5) ? "text-primary" : "text-muted-foreground/30"}`}
-                    >
-                      <Star className={`h-6 w-6 ${v <= (edit.rating ?? 5) ? "fill-current" : ""}`} />
-                    </button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="Фото автора (необязательно)">
-                <ImageUpload value={edit.photo_url} onChange={(url) => setEdit({ ...edit, photo_url: url })} />
-              </Field>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={edit.is_active ?? true} onChange={(e) => setEdit({ ...edit, is_active: e.target.checked })} className="rounded" />
-                Активен (показывать на сайте)
-              </label>
+              <div className="flex items-end pb-1">
+                <CheckboxRow checked={edit.is_active ?? true} onChange={(v) => setEdit({ ...edit, is_active: v })} label="Показывать на сайте" />
+              </div>
             </div>
-            <div className="mt-6 flex gap-3 justify-end">
-              <button onClick={() => setEdit(null)} className="px-5 py-2.5 rounded-lg hover:bg-surface-2 transition">Отмена</button>
-              <button onClick={save} className="btn-gold rounded-lg px-5 py-2.5 font-semibold">Сохранить</button>
-            </div>
+
+            <Field label="Аватар (необязательно)">
+              <ImageUpload value={edit.avatar_url} onChange={(url) => setEdit({ ...edit, avatar_url: url })} />
+            </Field>
           </div>
-        </div>
+          <ModalActions onCancel={() => setEdit(null)} onSave={save} saving={saving} />
+        </AdminModal>
       )}
     </div>
   );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>{children}</div>;
-}
-function Inp({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" />;
 }

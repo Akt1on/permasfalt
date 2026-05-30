@@ -1,4 +1,3 @@
-import { SITE } from "@/data/site";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchServices, fetchSettings } from "@/lib/site-data";
@@ -124,7 +123,7 @@ const PRICE_TABLE = [
 
 function PricesPage() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings, staleTime: 5 * 60 * 1000 });
-  const phone = settings?.contacts?.phone ?? SITE.phone;
+  const phone = settings?.contacts?.phone ?? "+7 (342) 277-77-10";
 
   return (
     <>
@@ -135,7 +134,7 @@ function PricesPage() {
           <nav aria-label="Хлебные крошки" className="mb-6">
             <ol className="flex items-center gap-2 text-xs text-white/40">
               <li><Link to="/" className="hover:text-primary transition">Главная</Link></li>
-              <li aria-hidden="true" className="text-border select-none">/</li>
+              <span>/</span>
               <li className="text-white/70">Цены</li>
             </ol>
           </nav>

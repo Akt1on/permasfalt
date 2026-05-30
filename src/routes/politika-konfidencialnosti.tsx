@@ -1,21 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteLayout } from "@/components/layout/SiteLayout";
+import { PageHeader } from "@/components/PageHeader";
 import { SITE } from "@/data/site";
+import { Seo } from "@/components/Seo";
 
 export const Route = createFileRoute("/politika-konfidencialnosti")({
-  head: () => ({
-    meta: [
-      { title: "Политика конфиденциальности | Пермь Асфальт 59" },
-      { name: "description", content: "Политика обработки персональных данных компании Пермь Асфальт 59. ФЗ-152." },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
-    links: [{ rel: "canonical", href: "https://permasfalt59.ru/politika-konfidencialnosti" }],
-  }),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
   return (
-      <section className="pt-28 pb-20">
+    <SiteLayout>
+      <Seo title="Политика конфиденциальности | Пермь Асфальт 59" noindex />
+      <PageHeader
+        breadcrumbs={[{ label: "Политика конфиденциальности" }]}
+        title="Политика конфиденциальности"
+      />
+      <section className="pb-20">
         <article className="container-x prose prose-invert max-w-3xl text-foreground/85 space-y-4 leading-relaxed [&_h2]:font-display [&_h2]:text-3xl [&_h2]:tracking-wide [&_h2]:mt-10">
           <p>
             Настоящая Политика обработки персональных данных (далее — «Политика») разработана в
@@ -83,5 +84,6 @@ function PrivacyPage() {
           </p>
         </article>
       </section>
+    </SiteLayout>
   );
 }

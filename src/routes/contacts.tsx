@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LazyMotion, domAnimation, m  } from "framer-motion";
+import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, MessageCircle, MessagesSquare, Send } from "lucide-react";
 import { fetchSettings } from "@/lib/site-data";
 import { CallbackForm } from "@/components/site/CallbackForm";
@@ -64,7 +64,7 @@ function ContactsPage() {
       <section className="pt-32 pb-16 bg-[oklch(0.20_0.008_60)]">
         <div className="h-1" style={{ background: "var(--gradient-primary)" }} />
         <div className="container-x pt-12">
-          <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
             <div className="chip chip-primary mb-4">Контакты</div>
             <h1 className="font-display text-5xl md:text-6xl font-bold text-white leading-tight">
               СВЯЖИТЕСЬ <span className="text-gradient-gold">С НАМИ</span>
@@ -72,7 +72,7 @@ function ContactsPage() {
             <p className="mt-5 text-white/60 max-w-xl leading-relaxed">
               Работаем без выходных. Выезд инженера на замер — бесплатно по Перми и всему краю.
             </p>
-          </m.div>
+          </motion.div>
         </div>
       </section>
 
@@ -85,24 +85,24 @@ function ContactsPage() {
               <h2 className="font-display text-2xl font-bold text-foreground mb-6">Наши контакты</h2>
 
               {c.phone && (
-                <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                   <ContactItem href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} icon={Phone} label="Телефон">
                     {c.phone}
                     {c.phone2 && <div className="text-sm text-muted-foreground font-normal mt-0.5">{c.phone2}</div>}
                   </ContactItem>
-                </m.div>
+                </motion.div>
               )}
 
               {c.email && (
-                <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
                   <ContactItem href={`mailto:${c.email}`} icon={Mail} label="E-mail">
                     {c.email}
                   </ContactItem>
-                </m.div>
+                </motion.div>
               )}
 
               {c.address && (
-                <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                   <ContactItem
                     icon={MapPin}
                     label="Адрес"
@@ -114,15 +114,15 @@ function ContactsPage() {
                     <meta itemProp="addressRegion" content="Пермский край" />
                     <meta itemProp="addressCountry" content="RU" />
                   </ContactItem>
-                </m.div>
+                </motion.div>
               )}
 
               {c.work_hours && (
-                <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                   <ContactItem icon={Clock} label="Режим работы">
                     {c.work_hours}
                   </ContactItem>
-                </m.div>
+                </motion.div>
               )}
 
               {/* Мессенджеры */}
@@ -166,7 +166,7 @@ function ContactsPage() {
             </div>
 
             {/* Форма */}
-            <m.div
+            <motion.div
               initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55, delay: 0.1 }}
             >
               <div className="bg-white rounded-2xl border border-border p-8 shadow-[var(--shadow-elevated)] card-accent-top">
@@ -194,7 +194,7 @@ function ContactsPage() {
                   />
                 </div>
               )}
-            </m.div>
+            </motion.div>
           </div>
         </div>
       </section>
