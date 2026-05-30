@@ -6,7 +6,7 @@ import { GALLERY, GALLERY_FILTERS } from "@/data/gallery";
 
 export function GallerySection({ withFilters = false }: { withFilters?: boolean }) {
   const [filter, setFilter] = useState("all");
-  const [active, setActive] = useState<string | null>(null);
+  const [active, setActive] = useState<{ src: string; title: string } | null>(null);
 
   const items = filter === "all" ? GALLERY : GALLERY.filter((g) => g.category === filter);
 
@@ -45,7 +45,7 @@ export function GallerySection({ withFilters = false }: { withFilters?: boolean 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: (i % 8) * 0.05 }}
-              onClick={() => setActive(item.src)}
+              onClick={() => setActive({ src: item.src, title: item.title })}
               className={`group relative overflow-hidden rounded-xl gold-border ${
                 i % 5 === 0 ? "md:row-span-2 md:col-span-2 aspect-square md:aspect-auto" : "aspect-[4/3]"
               }`}
@@ -88,8 +88,8 @@ export function GallerySection({ withFilters = false }: { withFilters?: boolean 
             <m.img
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              src={active}
-              alt=""
+              src={active.src}
+              alt={active.title || "Фото объекта"}
               className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-gold-lg"
             />
           </m.div>

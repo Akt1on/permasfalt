@@ -2,8 +2,6 @@ import { useState } from "react";
 import { LazyMotion, domAnimation, m as motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Calculator as CalcIcon, Sparkles } from "lucide-react";
 import { IMaskInput } from "react-imask";
-import { supabase } from "@/integrations/supabase/client";
-import { notifyLead } from "@/lib/notify-lead";
 import { toast } from "sonner";
 
 type Answer = { type: string; coverage: string; area: number; timing: string };
@@ -50,12 +48,20 @@ export function Quiz() {
       `Сроки: ${TIMING.find((t) => t.id === a.timing)?.label}`,
       `Расчётная стоимость: ~${price.toLocaleString("ru-RU")} ₽`,
     ].join(" • ");
-    const { error } = await supabase.from("leads").insert({ name: name || null, phone, message: summary, source: "quiz" });
-    setSubmitting(false);
-    if (error) { toast.error("Не удалось отправить. Попробуйте позже."); return; }
-    notifyLead({ name: name || null, phone, message: summary, source: "quiz" }).catch(() => {});
-    setDone(true);
-    toast.success("Заявка принята!");
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name || null, phone, message: summary, source: "quiz" }),
+      });
+      if (!res.ok) throw new Error("server");
+      setDone(true);
+      toast.success("Заявка принята!");
+    } catch {
+      toast.error("Не удалось отправить. Попробуйте позже.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const next = () => setStep((s) => Math.min(s + 1, totalSteps));

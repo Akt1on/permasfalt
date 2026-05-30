@@ -24,18 +24,12 @@ export const Route = createFileRoute("/sitemap.xml")({
         const staticEntries = [
           { path: "/",            priority: "1.0", changefreq: "weekly",  lastmod: now },
           { path: "/services",    priority: "0.9", changefreq: "weekly",  lastmod: now },
-          { path: "/uslugi",      priority: "0.9", changefreq: "weekly",  lastmod: now },
           { path: "/goroda",      priority: "0.9", changefreq: "monthly", lastmod: now },
           { path: "/tseny",       priority: "0.9", changefreq: "monthly", lastmod: now },
-          { path: "/ceny",        priority: "0.9", changefreq: "monthly", lastmod: now },
           { path: "/portfolio",   priority: "0.8", changefreq: "weekly",  lastmod: now },
           { path: "/blog",        priority: "0.8", changefreq: "weekly",  lastmod: now },
           { path: "/about",       priority: "0.6", changefreq: "monthly", lastmod: now },
-          { path: "/o-nas",       priority: "0.6", changefreq: "monthly", lastmod: now },
           { path: "/contacts",    priority: "0.7", changefreq: "monthly", lastmod: now },
-          { path: "/kontakty",    priority: "0.7", changefreq: "monthly", lastmod: now },
-          { path: "/otzyvy",      priority: "0.7", changefreq: "weekly",  lastmod: now },
-          { path: "/rayony",      priority: "0.8", changefreq: "monthly", lastmod: now },
           ...CITY_SLUGS.map((slug) => ({
             path: `/goroda/${slug}`,
             priority: "0.85",
@@ -51,12 +45,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           lastmod: s.updated_at ?? now,
         }));
 
-        const uslugiEntries = (services ?? []).map((s) => ({
-          path: `/uslugi/${s.slug}`,
-          priority: "0.85",
-          changefreq: "monthly",
-          lastmod: s.updated_at ?? now,
-        }));
+        // Note: /uslugi/$slug redirects to /services/$slug — not included to avoid duplicate URLs
 
         const projectEntries = (projects ?? []).map((p) => ({
           path: `/portfolio/${p.slug}`,
@@ -75,7 +64,6 @@ export const Route = createFileRoute("/sitemap.xml")({
         const allEntries = [
           ...staticEntries,
           ...serviceEntries,
-          ...uslugiEntries,
           ...projectEntries,
           ...postEntries,
         ];

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Pencil, Trash2, Plus, Star, ChevronUp, ChevronDown } from "lucide-react";
-import { Field } from "@/components/admin/ui";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/reviews")({ component: AdminReviews });
@@ -142,14 +141,14 @@ function AdminReviews() {
             <h2 className="font-display text-2xl font-bold mb-5">{edit.id ? "Редактировать отзыв" : "Новый отзыв"}</h2>
             <div className="grid gap-3">
               <Field label="Имя автора *">
-                <input value={edit.author_name ?? ""} onChange={(e) => setEdit({ ...edit, author_name: e.target.value })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" placeholder="Александр Иванов" />
+                <Inp value={edit.author_name ?? ""} onChange={(v) => setEdit({ ...edit, author_name: v })} placeholder="Александр Иванов" />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Должность">
-                  <input value={edit.author_role ?? ""} onChange={(e) => setEdit({ ...edit, author_role: e.target.value })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" placeholder="Директор" />
+                  <Inp value={edit.author_role ?? ""} onChange={(v) => setEdit({ ...edit, author_role: v })} placeholder="Директор" />
                 </Field>
                 <Field label="Компания">
-                  <input value={edit.author_company ?? ""} onChange={(e) => setEdit({ ...edit, author_company: e.target.value })} className="bg-input border border-border rounded-xl px-4 py-2.5 w-full text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none" placeholder='ООО "СтройИнвест"' />
+                  <Inp value={edit.author_company ?? ""} onChange={(v) => setEdit({ ...edit, author_company: v })} placeholder='ООО "СтройИнвест"' />
                 </Field>
               </div>
               <Field label="Текст отзыва *">
@@ -194,3 +193,9 @@ function AdminReviews() {
   );
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label className="text-xs uppercase tracking-widest text-muted-foreground block mb-1.5">{label}</label>{children}</div>;
+}
+function Inp({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="bg-input border border-border rounded-lg px-4 py-2.5 w-full focus:border-primary focus:outline-none" />;
+}

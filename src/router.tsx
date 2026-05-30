@@ -1,16 +1,22 @@
-import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 
-export const getRouter = () => {
-  const queryClient = new QueryClient();
+/**
+ * Factory function that creates the router with a shared QueryClient context.
+ * The QueryClient is created in main.tsx and passed here — this avoids
+ * the bug where two separate QueryClients exist (one in main.tsx, one here),
+ * causing cache misses and double-fetching on route navigations.
+ */
+export function getRouter(queryClient?: QueryClient) {
+  const qc = queryClient ?? new QueryClient();
 
-  const router = createRouter({
+  return createRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient: qc },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Preload on hover/focus — improves perceived performance
+    defaultPreload: "intent",
   });
-
-  return router;
-};
+}

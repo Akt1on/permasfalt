@@ -274,7 +274,7 @@ export function StatCard({
     <div className="bg-white border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-[0_4px_20px_-4px_oklch(0.82_0.19_85/0.15)] transition-all">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-        <div className={`relative h-9 w-9 rounded-xl grid place-items-center ${colorMap[color]}`}>
+        <div className={`h-9 w-9 rounded-xl grid place-items-center ${colorMap[color]}`}>
           <Icon className="h-4 w-4" />
           {pulse && (
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />

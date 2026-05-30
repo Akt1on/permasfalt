@@ -135,7 +135,7 @@ function PricesPage() {
           <nav aria-label="Хлебные крошки" className="mb-6">
             <ol className="flex items-center gap-2 text-xs text-white/40">
               <li><Link to="/" className="hover:text-primary transition">Главная</Link></li>
-              <span>/</span>
+              <li aria-hidden="true" className="text-border select-none">/</li>
               <li className="text-white/70">Цены</li>
             </ol>
           </nav>

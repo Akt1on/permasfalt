@@ -91,9 +91,9 @@ function ProjectPage() {
       <nav aria-label="Хлебные крошки" className="container-x pt-6 pb-0">
         <ol className="flex items-center gap-2 text-xs text-muted-foreground">
           <li><Link to="/" className="hover:text-primary transition">Главная</Link></li>
-          <span>/</span>
+          <li aria-hidden="true" className="text-border select-none">/</li>
           <li><Link to="/portfolio" className="hover:text-primary transition">Портфолио</Link></li>
-          <span>/</span>
+          <li aria-hidden="true" className="text-border select-none">/</li>
           <li className="text-foreground truncate max-w-[200px]">{project.title}</li>
         </ol>
       </nav>

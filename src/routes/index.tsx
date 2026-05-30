@@ -604,6 +604,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
         aria-expanded={open}
+        aria-controls="faq-answer"
       >
         <span className="font-display text-lg font-bold text-foreground">{q}</span>
         <div className="h-8 w-8 rounded-full bg-primary/10 grid place-items-center shrink-0">
@@ -613,6 +614,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
       <AnimatePresence initial={false}>
         {open && (
           <m.div
+            id="faq-answer"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}

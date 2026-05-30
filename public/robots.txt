@@ -1,10 +1,11 @@
 User-agent: *
 Allow: /
 
-# Закрываем служебные пути от индексации
-Disallow: /admin
+# Block admin panel from indexing
+Disallow: /admin/
 Disallow: /auth
+
+# Block utility pages
 Disallow: /api/
 
-# Sitemap
 Sitemap: https://permasfalt59.ru/sitemap.xml

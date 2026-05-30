@@ -240,13 +240,13 @@ function CityPage() {
               <span itemProp="name">Главная</span>
               <meta itemProp="position" content="1" />
             </Link>
-            <span>/</span>
+            <li aria-hidden="true" className="text-border select-none">/</li>
             <Link to="/goroda" className="hover:text-white/70 transition"
               itemProp="item" itemScope itemType="https://schema.org/WebPage">
               <span itemProp="name">Города</span>
               <meta itemProp="position" content="2" />
             </Link>
-            <span>/</span>
+            <li aria-hidden="true" className="text-border select-none">/</li>
             <span className="text-white/70" itemProp="item" itemScope itemType="https://schema.org/WebPage">
               <span itemProp="name">{c.name}</span>
               <meta itemProp="position" content="3" />

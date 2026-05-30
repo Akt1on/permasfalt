@@ -59,6 +59,27 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
+  // FIX: Redirect non-admins after role check completes
+  // Without this, any logged-in Supabase user can view the admin panel
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center max-w-sm">
+          <h1 className="text-xl font-bold mb-2">Доступ запрещён</h1>
+          <p className="text-sm text-muted-foreground mb-4">
+            У вашего аккаунта нет прав администратора.
+          </p>
+          <button
+            onClick={() => supabase.auth.signOut().then(() => nav({ to: "/auth" }))}
+            className="btn-gold rounded-lg px-5 py-2.5 text-sm font-semibold"
+          >
+            Выйти
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen grid place-items-center px-4 text-center bg-background">

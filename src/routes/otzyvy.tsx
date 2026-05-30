@@ -55,10 +55,16 @@ function ReviewsPage() {
       <>
         {/* BREADCRUMBS */}
         <nav className="container-x pt-28 pb-0">
-          <ol className="flex items-center gap-2 text-xs text-muted-foreground">
-            <li><Link to="/" className="hover:text-primary transition">Главная</Link></li>
-            <span>/</span>
-            <li className="text-foreground font-medium">Отзывы</li>
+          <ol className="flex items-center gap-2 text-xs text-muted-foreground" itemScope itemType="https://schema.org/BreadcrumbList">
+            <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+              <Link to="/" className="hover:text-primary transition" itemProp="item"><span itemProp="name">Главная</span></Link>
+              <meta itemProp="position" content="1" />
+            </li>
+            <li aria-hidden="true" className="text-border select-none">/</li>
+            <li className="text-foreground font-medium" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+              <span itemProp="name">Отзывы</span>
+              <meta itemProp="position" content="2" />
+            </li>
           </ol>
         </nav>
 

@@ -1,16 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentType } from "react";
 import {
-  Construction,
-  Wrench,
-  LayoutGrid,
-  Shovel,
-  Trash2,
-  Truck,
-  Hammer,
-  Snowflake,
-  PackageOpen,
-  Trees,
+  Construction, Wrench, LayoutGrid, Shovel, Trash2,
+  Truck, Hammer, Snowflake, PackageOpen, Trees,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SERVICES as FALLBACK_SERVICES } from "@/data/services";
@@ -92,133 +84,156 @@ export const getServiceIcon = (
   typeof icon === "string" ? SERVICE_ICON_MAP[icon] ?? Construction : icon;
 
 // ---------- Row mappers ----------
+// Maps DB columns → app types (handles both old and new column names)
 
-type ServiceRow = {
-  id: string;
-  slug: string;
-  title: string;
-  short_description: string | null;
-  price_from: number | null;
-  icon: string | null;
-  hero: string | null;
-  description: string | null;
-  includes: unknown;
-  faq: unknown;
-  image_url: string | null;
-  sort_order: number;
-};
-
-type PriceRow = {
-  id: string;
-  category_id: string;
-  category_title: string;
-  name: string;
-  price: string;
-  sort_order: number;
-};
-
-type GalleryRow = {
-  id: string;
-  src: string;
-  title: string;
-  category: string;
-  category_label: string;
-  year: number;
-  sort_order: number;
-};
-
-function mapService(row: ServiceRow): Service {
+function mapService(row: any): Service {
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    short: row.short_description ?? "",
-    priceFrom: row.price_from != null ? String(row.price_from) : "",
+    // DB может иметь short или short_description
+    short: row.short ?? row.short_description ?? row.title,
+    // DB может иметь price_from как число или текст
+    priceFrom: row.price_from != null
+      ? (typeof row.price_from === "number"
+        ? `от ${row.price_from} ₽/${row.price_unit ?? "м²"}`
+        : String(row.price_from))
+      : "по запросу",
     icon: (row.icon as ServiceIconKey) ?? "construction",
-    hero: row.hero,
-    description: row.description,
-    includes: Array.isArray(row.includes) ? (row.includes as string[]) : [],
-    faq: Array.isArray(row.faq) ? (row.faq as { q: string; a: string }[]) : [],
-    imageUrl: row.image_url,
-    order: row.sort_order ?? 0,
+    hero: row.hero ?? row.description ?? "",
+    description: row.description ?? "",
+    includes: Array.isArray(row.includes) ? row.includes as string[] : [],
+    faq: Array.isArray(row.faq) ? row.faq as { q: string; a: string }[] : [],
+    imageUrl: row.image_url ?? null,
+    // DB может иметь position или sort_order
+    order: row.position ?? row.sort_order ?? 0,
   };
 }
 
-function mapPrice(row: PriceRow): PriceItem {
+function mapPrice(row: any): PriceItem {
   return {
     id: row.id,
-    category_id: row.category_id,
-    category_title: row.category_title,
+    category_id: row.category_id ?? row.category ?? "general",
+    category_title: row.category_title ?? row.category ?? "Общее",
     name: row.name,
-    price: row.price,
-    order: row.sort_order ?? 0,
+    price: row.price != null ? String(row.price) : "",
+    order: row.position ?? row.sort_order ?? 0,
   };
 }
 
-function mapGallery(row: GalleryRow): GalleryItem {
+function mapGallery(row: any): GalleryItem {
   return {
     id: row.id,
-    src: row.src,
-    title: row.title,
-    category: row.category,
-    category_label: row.category_label,
-    year: row.year,
-    order: row.sort_order ?? 0,
+    src: row.src ?? row.image_url ?? "/placeholder.svg",
+    title: row.title ?? "",
+    category: row.category ?? "asfalt",
+    category_label: row.category_label ?? row.category ?? "Асфальтирование",
+    year: row.year ?? new Date().getFullYear(),
+    order: row.position ?? row.sort_order ?? 0,
   };
 }
 
-// ---------- Public fetchers (RLS allows anon SELECT) ----------
+// ---------- Public fetchers ----------
 
 export async function fetchServices(): Promise<Service[]> {
   const { data, error } = await supabase
     .from("services")
     .select("*")
     .order("sort_order", { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((row) => mapService(row as ServiceRow));
+  // Если sort_order не работает — пробуем без order
+  if (error) {
+    const { data: d2 } = await supabase.from("services").select("*");
+    return (d2 ?? []).map(mapService);
+  }
+  return (data ?? []).map(mapService);
 }
 
 export async function fetchPriceItems(): Promise<PriceItem[]> {
+  // Пробуем сначала таблицу price_items, потом pricing_items
   const { data, error } = await supabase
     .from("price_items")
     .select("*")
-    .order("category_title", { ascending: true })
-    .order("sort_order", { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((row) => mapPrice(row as PriceRow));
+    .order("category_title", { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    // Fallback на pricing_items
+    const { data: d2 } = await supabase
+      .from("pricing_items")
+      .select("*, services(title)")
+      .order("sort_order", { ascending: true });
+    if (d2 && d2.length > 0) {
+      return d2.map((row: any) => ({
+        id: row.id,
+        category_id: row.service_id ?? "general",
+        category_title: (row.services as any)?.title ?? "Общее",
+        name: row.name,
+        price: row.price != null ? `${row.price} ₽/${row.unit ?? "м²"}` : "",
+        order: row.sort_order ?? 0,
+      }));
+    }
+    return [];
+  }
+  return data.map(mapPrice);
 }
 
 export async function fetchGalleryItems(): Promise<GalleryItem[]> {
+  // Пробуем gallery_items, потом projects как fallback
   const { data, error } = await supabase
     .from("gallery_items")
     .select("*")
-    .order("sort_order", { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((row) => mapGallery(row as GalleryRow));
+    .order("position", { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    // Fallback на projects
+    const { data: d2 } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (d2 && d2.length > 0) {
+      return d2.map((row: any) => ({
+        id: row.id,
+        src: row.cover_image ?? "/placeholder.svg",
+        title: row.title,
+        category: row.category ?? "asfalt",
+        category_label: row.category ?? "Асфальтирование",
+        year: row.completed_at ? new Date(row.completed_at).getFullYear() : 2024,
+        order: row.sort_order ?? 0,
+      }));
+    }
+    return [];
+  }
+  return data.map(mapGallery);
 }
 
 export async function fetchSiteSettings(): Promise<SiteSettings> {
-  const { data } = await supabase.from("site_settings").select("*");
-  if (!data || data.length === 0) return FALLBACK_SITE as SiteSettings;
+  // Поддерживаем оба формата: {id,data} и {key,value}
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("*");
+
+  if (error || !data || data.length === 0) {
+    return FALLBACK_SITE as SiteSettings;
+  }
+
+  // Формат {id:'main', data:{...}}
+  const mainRow = data.find((r: any) => r.id === "main");
+  if (mainRow && mainRow.data) {
+    return mainRow.data as SiteSettings;
+  }
+
+  // Формат {key:'contacts', value:{...}}
   const out: Record<string, any> = {};
   for (const row of data as any[]) {
-    if ("key" in row && "value" in row) out[row.key] = row.value;
-    else if ("id" in row && "data" in row) Object.assign(out, row.data); // legacy
+    if ("key" in row && "value" in row) {
+      out[row.key] = row.value;
+    }
   }
-  const contacts = out.contacts ?? {};
-  return {
-    ...FALLBACK_SITE,
-    phone: contacts.phone ?? FALLBACK_SITE.phone,
-    phoneRaw: (contacts.phone ?? FALLBACK_SITE.phone).replace(/[^\d+]/g, ""),
-    address: contacts.address ?? FALLBACK_SITE.address,
-    hours: contacts.work_hours ?? FALLBACK_SITE.hours,
-    whatsapp: contacts.whatsapp ?? FALLBACK_SITE.whatsapp,
-    telegram: contacts.telegram ?? FALLBACK_SITE.telegram,
-    vk: contacts.vk ?? FALLBACK_SITE.vk,
-    max: contacts.max ?? FALLBACK_SITE.max,
-    email: contacts.email ?? FALLBACK_SITE.email,
-    legal: out.legal ?? FALLBACK_SITE.legal,
-  } as SiteSettings;
+  if (Object.keys(out).length > 0) {
+    return { ...FALLBACK_SITE, ...out.contacts, ...out } as SiteSettings;
+  }
+
+  return FALLBACK_SITE as SiteSettings;
 }
 
 // ---------- React Query hooks ----------
@@ -276,7 +291,7 @@ export function useSiteSettings() {
   });
 }
 
-// ---------- Grouping helpers (used by UI) ----------
+// ---------- Grouping helpers ----------
 
 export type PriceCategory = {
   category_id: string;
@@ -313,7 +328,7 @@ export function groupGalleryCategories(items: GalleryItem[]) {
   return Array.from(categories.values());
 }
 
-// ---------- Admin operations (RLS gates writes via has_role('admin')) ----------
+// ---------- Admin operations ----------
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (v: string) => UUID_RE.test(v);
@@ -332,14 +347,14 @@ export async function saveServicesDiff(draft: Service[], original: Service[]) {
       slug: s.slug,
       title: s.title,
       short_description: s.short,
-      price_from: s.priceFrom ? parseFloat(s.priceFrom) || null : null,
+      price_from: s.priceFrom ? parseFloat(s.priceFrom.replace(/[^\d.]/g, "")) || null : null,
       icon: typeof s.icon === "string" ? s.icon : "construction",
-      hero: s.hero,
       description: s.description,
       includes: s.includes,
       faq: s.faq,
       image_url: s.imageUrl ?? null,
       sort_order: s.order,
+      is_active: true,
     };
     if (isUuid(s.id)) {
       const { error } = await supabase.from("services").update(row).eq("id", s.id);
@@ -366,7 +381,7 @@ export async function savePricesDiff(draft: PriceItem[], original: PriceItem[]) 
       category_title: p.category_title,
       name: p.name,
       price: p.price,
-      sort_order: p.order,
+      position: p.order,
     };
     if (isUuid(p.id)) {
       const { error } = await supabase.from("price_items").update(row).eq("id", p.id);
@@ -394,7 +409,7 @@ export async function saveGalleryDiff(draft: GalleryItem[], original: GalleryIte
       category: g.category,
       category_label: g.category_label,
       year: g.year,
-      sort_order: g.order,
+      position: g.order,
     };
     if (isUuid(g.id)) {
       const { error } = await supabase.from("gallery_items").update(row).eq("id", g.id);
@@ -407,10 +422,17 @@ export async function saveGalleryDiff(draft: GalleryItem[], original: GalleryIte
 }
 
 export async function saveSiteSettings(settings: SiteSettings) {
+  // Пробуем оба формата
   const { error } = await supabase
     .from("site_settings")
     .upsert({ id: "main", data: settings }, { onConflict: "id" });
-  if (error) throw error;
+  if (error) {
+    // Fallback: key/value формат
+    await supabase.from("site_settings").upsert(
+      { key: "main", value: settings },
+      { onConflict: "key" }
+    );
+  }
 }
 
 export async function uploadSiteImage(file: File): Promise<string> {
@@ -427,10 +449,8 @@ export async function uploadSiteImage(file: File): Promise<string> {
 }
 
 export async function checkIsAdmin(_userId: string): Promise<boolean> {
-  // Uses email-based is_admin() RPC (migration 20260524000003)
   const { data, error } = await supabase.rpc("is_admin");
   if (error) {
-    // Fallback to user_roles for backwards compatibility
     const { data: roleData } = await supabase
       .from("user_roles").select("role")
       .eq("user_id", _userId).eq("role", "admin").maybeSingle();

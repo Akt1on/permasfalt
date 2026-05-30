@@ -145,7 +145,7 @@ function ServicePage() {
             {[{ label: "Главная", to: "/" }, { label: "Услуги", to: "/services" }].map((b, i) => (
               <li key={i} className="flex items-center gap-2">
                 <Link to={b.to} className="hover:text-primary transition">{b.label}</Link>
-                <span>/</span>
+                <li aria-hidden="true" className="text-border select-none">/</li>
               </li>
             ))}
             <li className="text-foreground font-medium">{service.title}</li>
@@ -422,6 +422,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
         aria-expanded={open}
+        aria-controls="faq-answer"
       >
         <span className="font-semibold text-foreground text-[15px] leading-snug">{q}</span>
         <div className="h-7 w-7 rounded-full bg-primary/10 grid place-items-center shrink-0">
@@ -431,6 +432,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
       <AnimatePresence initial={false}>
         {open && (
           <m.div
+            id="faq-answer"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}

@@ -331,3 +331,45 @@ html.custom-cursor-active [data-hover="1"] {
 
 /* Smooth scroll offset for anchored sections */
 [id] { scroll-margin-top: 80px; }
+
+/* ─── Missing utility classes ──────────────────────────────────────────────── */
+@layer components {
+  /* shadow-gold-lg — used in sections Hero, Gallery, Calculator */
+  .shadow-gold-lg {
+    box-shadow: 0 10px 40px -8px oklch(0.82 0.19 85 / 0.60);
+  }
+
+  /* animate-gold-pulse — was used in old FloatingContactButton (now removed), 
+     keeping for backward compat if referenced elsewhere */
+  @keyframes gold-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 oklch(0.82 0.19 85 / 0.5); }
+    50% { box-shadow: 0 0 0 12px oklch(0.82 0.19 85 / 0); }
+  }
+  .animate-gold-pulse {
+    animation: gold-pulse 2.5s ease-in-out infinite;
+  }
+
+  /* bg-surface — referenced in Header hover states  */
+  .bg-surface { background: var(--surface); }
+
+  /* Improved focus-visible styles for all interactive elements */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 3px solid oklch(0.82 0.19 85 / 0.6);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+
+/* Footer-specific opacity utilities (Tailwind 4 explicit registration) */
+@layer components {
+  .bg-white\/8 { background-color: oklch(1 0 0 / 0.08); }
+  .bg-white\/12 { background-color: oklch(1 0 0 / 0.12); }
+  .border-white\/8 { border-color: oklch(1 0 0 / 0.08); }
+  .border-white\/12 { border-color: oklch(1 0 0 / 0.12); }
+}

@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSettings } from "@/lib/site-data";
-import { SITE } from "@/data/site";
 import { toast } from "sonner";
 import {
   Phone, Mail, MapPin, Clock, MessageCircle, Send, Globe,
@@ -75,24 +74,11 @@ function AdminSettings() {
   const [saving, setSaving] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (settings !== undefined) {
-      setContacts(settings.contacts ?? {
-        phone: SITE.phone,
-        address: SITE.address,
-        work_hours: SITE.hours,
-        email: SITE.email,
-        whatsapp: SITE.whatsapp,
-        telegram: SITE.telegram,
-        vk: SITE.vk,
-        max: SITE.max,
-      });
+    if (settings) {
+      setContacts(settings.contacts ?? {});
       setHero(settings.hero ?? {});
       setAbout(settings.about ?? {});
-      setLegal(settings.legal ?? {
-        name: SITE.legal.name,
-        ogrn: SITE.legal.ogrn,
-        inn: SITE.legal.inn,
-      });
+      setLegal(settings.legal ?? {});
     }
   }, [settings]);
 
