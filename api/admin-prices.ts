@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from("price_items")
       .select("*")
       .order("category_title", { ascending: true })
-      .order("order", { ascending: true });
+      .order("position", { ascending: true });
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ items: data ?? [] });
   }

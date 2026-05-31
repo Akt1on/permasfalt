@@ -97,15 +97,17 @@ type ServiceRow = {
   id: string;
   slug: string;
   title: string;
-  short: string;
-  price_from: string;
-  icon: string;
-  hero: string;
-  description: string;
+  short: string | null;
+  short_description: string | null;
+  price_from: string | null;
+  icon: string | null;
+  hero: string | null;
+  description: string | null;
   includes: unknown;
   faq: unknown;
   image_url: string | null;
-  position: number;
+  position: number | null;
+  sort_order: number;
 };
 
 type PriceRow = {
@@ -132,15 +134,15 @@ function mapService(row: ServiceRow): Service {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    short: row.short,
-    priceFrom: row.price_from,
+    short: row.short ?? row.short_description ?? "",
+    priceFrom: row.price_from ?? "",
     icon: (row.icon as ServiceIconKey) ?? "construction",
-    hero: row.hero,
-    description: row.description,
+    hero: row.hero ?? "",
+    description: row.description ?? "",
     includes: Array.isArray(row.includes) ? (row.includes as string[]) : [],
     faq: Array.isArray(row.faq) ? (row.faq as { q: string; a: string }[]) : [],
     imageUrl: row.image_url,
-    order: row.position ?? 0,
+    order: row.sort_order ?? row.position ?? 0,
   };
 }
 
@@ -183,7 +185,7 @@ export async function fetchPriceItems(): Promise<PriceItem[]> {
     .from("price_items")
     .select("*")
     .order("category_title", { ascending: true })
-    .order("sort_order", { ascending: true });
+    .order("position", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapPrice(row as PriceRow));
 }
@@ -192,7 +194,7 @@ export async function fetchGalleryItems(): Promise<GalleryItem[]> {
   const { data, error } = await supabase
     .from("gallery_items")
     .select("*")
-    .order("sort_order", { ascending: true });
+    .order("position", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapGallery(row as GalleryRow));
 }
@@ -331,6 +333,7 @@ export async function saveServicesDiff(draft: Service[], original: Service[]) {
       faq: s.faq,
       image_url: s.imageUrl ?? null,
       position: s.order,
+      sort_order: s.order,
     };
     if (isUuid(s.id)) {
       const { error } = await supabase.from("services").update(row).eq("id", s.id);
