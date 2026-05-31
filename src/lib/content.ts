@@ -183,7 +183,7 @@ export async function fetchPriceItems(): Promise<PriceItem[]> {
     .from("price_items")
     .select("*")
     .order("category_title", { ascending: true })
-    .order("position", { ascending: true });
+    .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapPrice(row as PriceRow));
 }
@@ -192,7 +192,7 @@ export async function fetchGalleryItems(): Promise<GalleryItem[]> {
   const { data, error } = await supabase
     .from("gallery_items")
     .select("*")
-    .order("position", { ascending: true });
+    .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => mapGallery(row as GalleryRow));
 }
@@ -427,3 +427,4 @@ export async function checkIsAdmin(userId: string): Promise<boolean> {
   if (error) return false;
   return !!data;
 }
+
