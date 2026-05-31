@@ -88,7 +88,7 @@ export function Header() {
                           return (
                             <Link
                               key={s.slug}
-                              to="/uslugi/$slug"
+                              to="/services/$slug"
                               params={{ slug: s.slug }}
                               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2 hover:text-[var(--gold)] transition-colors"
                             >

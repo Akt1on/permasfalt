@@ -32,7 +32,7 @@ export function Footer() {
             {SERVICES.slice(0, 6).map((s) => (
               <li key={s.slug}>
                 <Link
-                  to="/uslugi/$slug"
+                  to="/services/$slug"
                   params={{ slug: s.slug }}
                   className="text-muted-foreground hover:text-[var(--gold)] transition-colors"
                 >
@@ -41,7 +41,7 @@ export function Footer() {
               </li>
             ))}
             <li>
-              <Link to="/uslugi" className="text-[var(--gold)] hover:underline">
+              <Link to="/services" className="text-[var(--gold)] hover:underline">
                 Все услуги →
               </Link>
             </li>

@@ -132,7 +132,7 @@ export function AdminOverview() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-sm text-foreground">{lead.name}</span>
+                    <span className="font-semibold text-sm text-foreground">{lead.name ?? "Имя не указано"}</span>
                     <StatusPill status={lead.status} />
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

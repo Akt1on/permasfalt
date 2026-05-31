@@ -30,6 +30,14 @@ import { Route as ServicesSlugImport } from './routes/services.$slug'
 import { Route as PortfolioSlugImport } from './routes/portfolio.$slug'
 import { Route as GorodaCityImport } from './routes/goroda.$city'
 import { Route as BlogSlugImport } from './routes/blog.$slug'
+import { Route as CenyImport } from './routes/ceny'
+import { Route as KontaktyImport } from './routes/kontakty'
+import { Route as ONasImport } from './routes/o-nas'
+import { Route as OtzyvyImport } from './routes/otzyvy'
+import { Route as ObektyImport } from './routes/obekty'
+import { Route as PolitikaKonfidencialnostiImport } from './routes/politika-konfidencialnosti'
+import { Route as UslugiImport } from './routes/uslugi'
+import { Route as UslugiSlugImport } from './routes/uslugi.$slug'
 
 const AuthRoute = AuthImport.update({ path: '/auth', getParentRoute: () => rootRoute } as any)
 const AdminRoute = AdminImport.update({ id: '/admin', path: '/admin', getParentRoute: () => rootRoute } as any)
@@ -55,6 +63,14 @@ const ServicesSlugRoute = ServicesSlugImport.update({ path: '/$slug', getParentR
 const PortfolioSlugRoute = PortfolioSlugImport.update({ path: '/$slug', getParentRoute: () => PortfolioRoute } as any)
 const GorodaCityRoute = GorodaCityImport.update({ path: '/$city', getParentRoute: () => GorodaRoute } as any)
 const BlogSlugRoute = BlogSlugImport.update({ path: '/$slug', getParentRoute: () => BlogRoute } as any)
+const CenyRoute = CenyImport.update({ path: '/ceny', getParentRoute: () => rootRoute } as any)
+const KontaktyRoute = KontaktyImport.update({ path: '/kontakty', getParentRoute: () => rootRoute } as any)
+const ONasRoute = ONasImport.update({ path: '/o-nas', getParentRoute: () => rootRoute } as any)
+const OtzyvyRoute = OtzyvyImport.update({ path: '/otzyvy', getParentRoute: () => rootRoute } as any)
+const ObektyRoute = ObektyImport.update({ path: '/obekty', getParentRoute: () => rootRoute } as any)
+const PolitikaKonfidencialnostiRoute = PolitikaKonfidencialnostiImport.update({ path: '/politika-konfidencialnosti', getParentRoute: () => rootRoute } as any)
+const UslugiRoute = UslugiImport.update({ path: '/uslugi', getParentRoute: () => rootRoute } as any)
+const UslugiSlugRoute = UslugiSlugImport.update({ path: '/$slug', getParentRoute: () => UslugiRoute } as any)
 
 export interface FileRoutesByPath {
   '/': { id: '/'; path: '/'; fullPath: '/'; preLoaderRoute: typeof IndexImport; parentRoute: typeof rootRoute; }
@@ -81,6 +97,14 @@ export interface FileRoutesByPath {
   '/admin/reviews': { id: '/admin/reviews'; path: '/reviews'; fullPath: '/admin/reviews'; preLoaderRoute: typeof AdminReviewsImport; parentRoute: typeof AdminRoute; }
   '/admin/services': { id: '/admin/services'; path: '/services'; fullPath: '/admin/services'; preLoaderRoute: typeof AdminServicesImport; parentRoute: typeof AdminRoute; }
   '/admin/settings': { id: '/admin/settings'; path: '/settings'; fullPath: '/admin/settings'; preLoaderRoute: typeof AdminSettingsImport; parentRoute: typeof AdminRoute; }
+  '/ceny': { id: '/ceny'; path: '/ceny'; fullPath: '/ceny'; preLoaderRoute: typeof CenyImport; parentRoute: typeof rootRoute; }
+  '/kontakty': { id: '/kontakty'; path: '/kontakty'; fullPath: '/kontakty'; preLoaderRoute: typeof KontaktyImport; parentRoute: typeof rootRoute; }
+  '/o-nas': { id: '/o-nas'; path: '/o-nas'; fullPath: '/o-nas'; preLoaderRoute: typeof ONasImport; parentRoute: typeof rootRoute; }
+  '/otzyvy': { id: '/otzyvy'; path: '/otzyvy'; fullPath: '/otzyvy'; preLoaderRoute: typeof OtzyvyImport; parentRoute: typeof rootRoute; }
+  '/obekty': { id: '/obekty'; path: '/obekty'; fullPath: '/obekty'; preLoaderRoute: typeof ObektyImport; parentRoute: typeof rootRoute; }
+  '/politika-konfidencialnosti': { id: '/politika-konfidencialnosti'; path: '/politika-konfidencialnosti'; fullPath: '/politika-konfidencialnosti'; preLoaderRoute: typeof PolitikaKonfidencialnostiImport; parentRoute: typeof rootRoute; }
+  '/uslugi': { id: '/uslugi'; path: '/uslugi'; fullPath: '/uslugi'; preLoaderRoute: typeof UslugiImport; parentRoute: typeof rootRoute; }
+  '/uslugi/$slug': { id: '/uslugi/$slug'; path: '/$slug'; fullPath: '/uslugi/$slug'; preLoaderRoute: typeof UslugiSlugImport; parentRoute: typeof UslugiRoute; }
 }
 
 export function createRouteTree() {
@@ -95,6 +119,13 @@ export function createRouteTree() {
     PrivacyPolicyRoute,
     ServicesRoute._addFileChildren([ServicesSlugRoute]),
     TsenyRoute,
+    CenyRoute,
+    KontaktyRoute,
+    ONasRoute,
+    OtzyvyRoute,
+    ObektyRoute,
+    PolitikaKonfidencialnostiRoute,
+    UslugiRoute._addFileChildren([UslugiSlugRoute]),
     AuthRoute,
     AdminRoute._addFileChildren([
       AdminLeadsRoute,

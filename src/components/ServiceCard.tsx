@@ -14,7 +14,7 @@ export function ServiceCard({ service, index = 0 }: { service: Service; index?: 
       transition={{ duration: 0.5, delay: (index % 4) * 0.07 }}
     >
       <Link
-        to="/uslugi/$slug"
+        to="/services/$slug"
         params={{ slug: service.slug }}
         className="group relative block h-full rounded-2xl asphalt-bg gold-border p-6 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:gold-glow"
       >
