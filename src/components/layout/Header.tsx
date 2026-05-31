@@ -84,7 +84,7 @@ export function Header() {
                     >
                       <div className="glass rounded-xl p-2 shadow-card grid grid-cols-2 gap-1">
                         {services.map((s) => {
-                          const Icon = getServiceIcon(s.icon);
+                          const Icon = getServiceIcon(s.icon) ?? getServiceIcon("construction");
                           return (
                             <Link
                               key={s.slug}
@@ -92,7 +92,7 @@ export function Header() {
                               params={{ slug: s.slug }}
                               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2 hover:text-[var(--gold)] transition-colors"
                             >
-                              <Icon className="h-4 w-4 text-[var(--gold)]" />
+                              {Icon && <Icon className="h-4 w-4 text-[var(--gold)]" />}
                               <span className="truncate">{s.title}</span>
                             </Link>
                           );
