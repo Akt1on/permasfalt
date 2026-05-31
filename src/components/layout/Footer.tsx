@@ -85,9 +85,9 @@ export function Footer() {
             </a>
           </div>
           <div className="mt-6 text-xs text-muted-foreground space-y-1">
-            <div>{site.legal.name}</div>
-            <div>{site.legal.ogrn}</div>
-            <div>{site.legal.inn}</div>
+            <div>{site.legal?.name}</div>
+            <div>{site.legal?.ogrn}</div>
+            div>{site.legal?.inn}</div>
           </div>
         </div>
       </div>
