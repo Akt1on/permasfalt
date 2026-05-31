@@ -1,8 +1,8 @@
 {
-  "framework": null,
+  "framework": "vite",
   "buildCommand": "bun run build",
   "installCommand": "bun install --ignore-scripts",
-  "outputDirectory": "dist/client",
+  "outputDirectory": "dist",
   "functions": {
     "api/notify-lead.ts": {
       "maxDuration": 10
