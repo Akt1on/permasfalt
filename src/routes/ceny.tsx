@@ -4,17 +4,33 @@ import { motion } from "framer-motion";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { CTASection } from "@/components/sections/CTASection";
-import { PRICE_CATEGORIES } from "@/data/prices";
+import { PRICE_CATEGORIES as STATIC_PRICES } from "@/data/prices";
 import { FadeInUp } from "@/components/ui-blocks";
 import { Seo } from "@/components/Seo";
+import { usePriceItems, groupPriceItems } from "@/lib/content";
 
 export const Route = createFileRoute("/ceny")({
   component: PricesPage,
 });
 
 function PricesPage() {
-  const [active, setActive] = useState(PRICE_CATEGORIES[0].id);
-  const cat = PRICE_CATEGORIES.find((c) => c.id === active)!;
+  const { data: priceItems = [] } = usePriceItems();
+
+  // Build categories from DB data, fallback to static if empty
+  const dbCategories = priceItems.length > 0
+    ? groupPriceItems(priceItems).map((c) => ({
+        id: c.category_id,
+        title: c.category_title,
+        rows: c.rows.map((r) => ({ name: r.name, price: r.price })),
+      }))
+    : STATIC_PRICES;
+
+  const categories = dbCategories.length > 0 ? dbCategories : STATIC_PRICES;
+
+  const [active, setActive] = useState<string>(() => categories[0]?.id ?? "");
+  const cat = categories.find((c) => c.id === active) ?? categories[0];
+
+  if (!cat) return null;
 
   return (
     <SiteLayout>
@@ -33,7 +49,7 @@ function PricesPage() {
         <div className="container-x">
           <FadeInUp>
             <div className="flex flex-wrap gap-2 mb-8">
-              {PRICE_CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setActive(c.id)}

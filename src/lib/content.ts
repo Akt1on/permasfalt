@@ -200,11 +200,16 @@ export async function fetchGalleryItems(): Promise<GalleryItem[]> {
 export async function fetchSiteSettings(): Promise<SiteSettings> {
   const { data, error } = await supabase
     .from("site_settings")
-    .select("data")
-    .eq("id", "main")
-    .maybeSingle();
+    .select("key, value");
   if (error) throw error;
-  return (data?.data as SiteSettings) ?? (FALLBACK_SITE as SiteSettings);
+  if (!data || data.length === 0) return FALLBACK_SITE as SiteSettings;
+  // Support single "main" key containing full settings object
+  const mainRow = (data as any[]).find((r) => r.key === "main");
+  if (mainRow) return (mainRow.value as SiteSettings) ?? (FALLBACK_SITE as SiteSettings);
+  // Otherwise merge all key/value pairs into settings object
+  const merged: Record<string, unknown> = {};
+  for (const row of data as any[]) merged[row.key] = row.value;
+  return (Object.keys(merged).length > 0 ? merged : FALLBACK_SITE) as SiteSettings;
 }
 
 // ---------- React Query hooks ----------
@@ -395,7 +400,7 @@ export async function saveGalleryDiff(draft: GalleryItem[], original: GalleryIte
 export async function saveSiteSettings(settings: SiteSettings) {
   const { error } = await supabase
     .from("site_settings")
-    .upsert({ id: "main", data: settings }, { onConflict: "id" });
+    .upsert({ key: "main", value: settings }, { onConflict: "key" });
   if (error) throw error;
 }
 

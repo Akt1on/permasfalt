@@ -161,7 +161,7 @@ function ServicePage() {
               <DynIcon name={service.icon} className="h-7 w-7" />
             </div>
             <div>
-              <h1 {service.title} в Перми</h1>>{service.title} в Перми</h1>
+              <h1 className="font-display text-3xl sm:text-4xl font-black tracking-tight text-white">{service.title} в Перми</h1>
               <p className="mt-4 text-lg text-white/75 max-w-2xl">{service.short_description}</p>
             </div>
           </div>

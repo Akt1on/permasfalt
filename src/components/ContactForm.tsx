@@ -5,7 +5,7 @@ import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { Loader2, CheckCircle2, Send, AlertCircle, Phone } from "lucide-react";
-import { SERVICES } from "@/data/services";
+import { useServices } from "@/lib/content";
 import { SITE } from "@/data/site";
 
 const schema = z.object({
@@ -31,6 +31,7 @@ export function ContactForm({
 }) {
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const { data: services = [] } = useServices();
   const {
     register,
     handleSubmit,
@@ -96,7 +97,7 @@ export function ContactForm({
           <Field label="Услуга">
             <select {...register("service")} className="input-base">
               <option value="">— Выберите услугу —</option>
-              {SERVICES.map((s) => (
+              {services.map((s) => (
                 <option key={s.slug} value={s.title}>
                   {s.title}
                 </option>

@@ -113,3 +113,6 @@ export function createRouteTree() {
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath extends FileRoutesByPath {}
 }
+
+// Named export for router.tsx compatibility
+export const routeTree = createRouteTree();

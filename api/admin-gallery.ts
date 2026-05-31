@@ -55,8 +55,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .not("id", "in", `(${ids.map((id) => `'${id}'`).join(",")})`);
       if (deleteError) return res.status(500).json({ error: deleteError.message });
     } else {
-      const { error: deleteError } = await supabaseAdmin.from("gallery_items").delete();
-      if (deleteError) return res.status(500).json({ error: deleteError.message });
+      // Safety guard: never unconditionally delete all gallery_items
+      // An empty payload should be a no-op, not a full table wipe
     }
 
     return res.status(200).json({ ok: true });

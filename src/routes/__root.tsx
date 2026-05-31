@@ -195,7 +195,7 @@ function RootComponent() {
         </div>
         <Header />
         <main className="flex-1">
-          <PageTransition>
+          <PageTransition path={path}>
             <Outlet />
           </PageTransition>
         </main>

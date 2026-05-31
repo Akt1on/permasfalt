@@ -38,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data, error } = await supabaseAdmin
       .from("services")
       .select("*")
-      .order("order", { ascending: true });
+      .order("sort_order", { ascending: true });
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ services: data ?? [] });
   }
@@ -48,8 +48,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
 
     const services = parsed.data.services.map((service) => ({
-      ...service,
       id: service.id || undefined,
+      slug: service.slug,
+      title: service.title,
+      short: service.short,
+      short_description: service.short,
+      price_from: service.priceFrom,
+      icon: service.icon,
+      hero: service.hero,
+      description: service.description,
+      includes: service.includes ?? [],
+      faq: service.faq ?? [],
+      image_url: service.imageUrl ?? null,
+      sort_order: service.order ?? 0,
+      position: service.order ?? 0,
+      is_active: true,
     }));
 
     const { error: upsertError } = await supabaseAdmin
@@ -65,8 +78,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .not("id", "in", `(${ids.map((id) => `'${id}'`).join(",")})`);
       if (deleteError) return res.status(500).json({ error: deleteError.message });
     } else {
-      const { error: deleteError } = await supabaseAdmin.from("services").delete();
-      if (deleteError) return res.status(500).json({ error: deleteError.message });
+      // Safety guard: only delete all if explicitly sending empty array with a "clearAll" flag
+      // Never do unconditional DELETE on services in production
     }
 
     return res.status(200).json({ ok: true });

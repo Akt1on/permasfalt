@@ -60,6 +60,10 @@ export type Database = {
           service: string | null
           source: string | null
           status: string
+          telegram_sent: boolean
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
         }
         Insert: {
           created_at?: string
@@ -70,6 +74,10 @@ export type Database = {
           service?: string | null
           source?: string | null
           status?: string
+          telegram_sent?: boolean
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Update: {
           created_at?: string
@@ -80,6 +88,10 @@ export type Database = {
           service?: string | null
           source?: string | null
           status?: string
+          telegram_sent?: boolean
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: []
       }
@@ -288,72 +300,6 @@ export type Database = {
         }
         Relationships: []
       }
-      services: {
-        Row: {
-          created_at: string
-          description: string | null
-          icon: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          price_from: number | null
-          price_unit: string | null
-          short_description: string | null
-          slug: string
-          sort_order: number
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          icon?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          price_from?: number | null
-          price_unit?: string | null
-          short_description?: string | null
-          slug: string
-          sort_order?: number
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          icon?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          price_from?: number | null
-          price_unit?: string | null
-          short_description?: string | null
-          slug?: string
-          sort_order?: number
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      site_settings: {
-        Row: {
-          key: string
-          updated_at: string
-          value: Json
-        }
-        Insert: {
-          key: string
-          updated_at?: string
-          value: Json
-        }
-        Update: {
-          key?: string
-          updated_at?: string
-          value?: Json
-        }
-        Relationships: []
-      }
       price_items: {
         Row: {
           category_id: string
@@ -390,49 +336,61 @@ export type Database = {
       services: {
         Row: {
           created_at: string
-          description: string
-          faq: Json
-          hero: string
-          icon: string
+          description: string | null
+          faq: Json | null
+          hero: string | null
+          icon: string | null
           id: string
           image_url: string | null
-          includes: Json
-          position: number
-          price_from: string
-          short: string
+          includes: Json | null
+          is_active: boolean
+          position: number | null
+          price_from: string | null
+          price_unit: string | null
+          short: string | null
+          short_description: string | null
           slug: string
+          sort_order: number
           title: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string
-          faq?: Json
-          hero?: string
-          icon?: string
+          description?: string | null
+          faq?: Json | null
+          hero?: string | null
+          icon?: string | null
           id?: string
           image_url?: string | null
-          includes?: Json
-          position?: number
-          price_from?: string
-          short?: string
+          includes?: Json | null
+          is_active?: boolean
+          position?: number | null
+          price_from?: string | null
+          price_unit?: string | null
+          short?: string | null
+          short_description?: string | null
           slug: string
+          sort_order?: number
           title: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string
-          faq?: Json
-          hero?: string
-          icon?: string
+          description?: string | null
+          faq?: Json | null
+          hero?: string | null
+          icon?: string | null
           id?: string
           image_url?: string | null
-          includes?: Json
-          position?: number
-          price_from?: string
-          short?: string
+          includes?: Json | null
+          is_active?: boolean
+          position?: number | null
+          price_from?: string | null
+          price_unit?: string | null
+          short?: string | null
+          short_description?: string | null
           slug?: string
+          sort_order?: number
           title?: string
           updated_at?: string
         }
@@ -440,19 +398,19 @@ export type Database = {
       }
       site_settings: {
         Row: {
-          data: Json
-          id: string
+          key: string
           updated_at: string
+          value: Json
         }
         Insert: {
-          data: Json
-          id: string
+          key: string
           updated_at?: string
+          value: Json
         }
         Update: {
-          data?: Json
-          id?: string
+          key?: string
           updated_at?: string
+          value?: Json
         }
         Relationships: []
       }

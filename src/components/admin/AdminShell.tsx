@@ -99,7 +99,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
-          const active = item.exact ? path === item.to : path.startsWith(item.to);
+          const active = (item as any).exact ? path === item.to : path.startsWith(item.to);
           const badge = item.to === "/admin/leads" && newLeads > 0 ? newLeads : null;
           return (
             <Link

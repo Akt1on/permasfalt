@@ -80,3 +80,8 @@ export async function fetchPost(slug: string): Promise<Post | null> {
   const { data } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
   return (data as Post) ?? null;
 }
+
+export async function fetchAllReviews(): Promise<Review[]> {
+  const { data } = await supabase.from("reviews").select("*").order("sort_order");
+  return (data ?? []) as Review[];
+}

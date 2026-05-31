@@ -40,11 +40,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "GET") {
     const { data, error } = await supabaseAdmin
       .from("site_settings")
-      .select("*")
+      .select("key, value")
       .eq("id", "main")
       .maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ settings: data?.data ?? null });
+    const mainRow = Array.isArray(data) ? data.find((r: any) => r.key === "main") : null;
+    return res.status(200).json({ settings: mainRow?.value ?? null });
   }
 
   if (req.method === "PATCH") {
@@ -53,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { error } = await supabaseAdmin
       .from("site_settings")
-      .upsert({ id: "main", data: parsed.data.settings }, { onConflict: "id" });
+      .upsert({ key: "main", value: parsed.data.settings }, { onConflict: "key" });
     if (error) return res.status(500).json({ error: error.message });
 
     return res.status(200).json({ ok: true });

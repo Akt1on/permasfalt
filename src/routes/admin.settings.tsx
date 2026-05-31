@@ -84,7 +84,7 @@ function AdminSettings() {
 
   const save = async (key: string, value: any) => {
     setSaving((s) => ({ ...s, [key]: true }));
-    const { error } = await supabase.from("site_settings").upsert({ key, value });
+    const { error } = await supabase.from("site_settings").upsert({ key, value }, { onConflict: "key" });
     setSaving((s) => ({ ...s, [key]: false }));
     if (error) { toast.error(error.message); return; }
     toast.success("Сохранено — изменения на сайте появятся через 1-2 минуты");

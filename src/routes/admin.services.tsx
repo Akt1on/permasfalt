@@ -26,7 +26,6 @@ function AdminServices() {
   });
   const [edit, setEdit] = useState<Partial<Service> | null>(null);
   const [saving, setSaving] = useState(false);
-  const [pricingEdit, setPricingEdit] = useState<string | null>(null);
 
   const save = async () => {
     if (!edit?.title || !edit?.slug) {
@@ -41,7 +40,7 @@ function AdminServices() {
       description: edit.description ?? null,
       image_url: edit.image_url ?? null,
       icon: edit.icon ?? "wrench",
-      price_from: edit.price_from ?? null,
+      price_from: edit.price_from != null ? String(edit.price_from) : null,
       price_unit: edit.price_unit ?? "м²",
       sort_order: edit.sort_order ?? 0,
       is_active: edit.is_active ?? true,
@@ -55,6 +54,7 @@ function AdminServices() {
     setEdit(null);
     qc.invalidateQueries({ queryKey: ["admin-services"] });
     qc.invalidateQueries({ queryKey: ["services"] });
+    qc.invalidateQueries({ queryKey: ["content", "services"] });
   };
 
   const del = async (id: string) => {
@@ -63,6 +63,7 @@ function AdminServices() {
     if (error) { toast.error(error.message); return; }
     toast.success("Удалено");
     qc.invalidateQueries({ queryKey: ["admin-services"] });
+    qc.invalidateQueries({ queryKey: ["content", "services"] });
   };
 
   return (
@@ -143,46 +144,12 @@ function AdminServices() {
               </Field>
             </div>
 
-            <Field label="Краткое описание" hint="Показывается в карточке на главной (до 120 символов)">
-              <Input value={edit.short_description ?? ""} onChange={(v) => setEdit({ ...edit, short_description: v })} placeholder="Профессиональная укладка асфальта…" />
-            </Field>
-
-            <Field label="Hero — подпись под заголовком страницы" hint="Короткий SEO-слоган (до 100 символов)">
-              <Input value={(edit as any).hero ?? ""} onChange={(v) => setEdit({ ...edit, hero: v } as any)} placeholder="Профессиональное асфальтирование в Перми с гарантией 3 года" />
-            </Field>
-
-            <Field label="Краткое описание (карточка)" hint="До 120 символов, показывается в листинге">
+            <Field label="Краткое описание" hint="Показывается в карточке (до 120 символов)">
               <Input value={edit.short_description ?? ""} onChange={(v) => setEdit({ ...edit, short_description: v })} placeholder="Укладка асфальта любой сложности" />
             </Field>
 
             <Field label="Полное описание (SEO-текст на странице)">
               <Textarea value={edit.description ?? ""} onChange={(v) => setEdit({ ...edit, description: v })} rows={5} placeholder="Подробное описание услуги для SEO и клиентов…" />
-            </Field>
-
-            <Field label="Что входит в услугу" hint="Каждый пункт — с новой строки">
-              <Textarea
-                value={((edit as any).includes ?? []).join("\n")}
-                onChange={(v) => setEdit({ ...edit, includes: v.split("\n").filter(Boolean) } as any)}
-                rows={5}
-                mono
-                placeholder={"Бесплатный выезд замерщика\nУкладка асфальта финишером\nГарантия 3 года в договоре"}
-              />
-            </Field>
-
-            <Field label="FAQ — Вопрос | Ответ" hint="Каждая пара с новой строки, разделитель: | (вертикальная черта)">
-              <Textarea
-                value={((edit as any).faq ?? []).map((f: any) => `${f.q} | ${f.a}`).join("\n")}
-                onChange={(v) => {
-                  const faq = v.split("\n").filter(Boolean).map((line: string) => {
-                    const sep = line.indexOf(" | ");
-                    return sep === -1 ? { q: line, a: "" } : { q: line.slice(0, sep).trim(), a: line.slice(sep + 3).trim() };
-                  });
-                  setEdit({ ...edit, faq } as any);
-                }}
-                rows={5}
-                mono
-                placeholder={"Сколько стоит 1 м²? | от 300 ₽/м²\nКакая гарантия? | 3 года в договоре"}
-              />
             </Field>
 
             <div className="grid sm:grid-cols-3 gap-4">

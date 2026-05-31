@@ -26,6 +26,7 @@ supabase db push
 # 1. supabase/migrations/00000000000001_ultimate_schema.sql
 # 2. supabase/migrations/20260526000001_fix_schema_final.sql
 # 3. supabase/migrations/20260527000001_create_missing_tables.sql
+# 4. supabase/migrations/20260531000001_add_leads_utm_fields.sql
 ```
 
 ### 3. Деплой
