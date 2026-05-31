@@ -173,7 +173,7 @@ export async function fetchServices(): Promise<Service[]> {
   const { data, error } = await supabase
     .from("services")
     .select("*")
-    .order("position", { ascending: true });
+    .order("sort_order", { ascending: true, nullsFirst: false });
   if (error) throw error;
   return (data ?? []).map((row) => mapService(row as ServiceRow));
 }
