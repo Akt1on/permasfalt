@@ -70,14 +70,14 @@ export default defineConfig({
     },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
-        process.env.VITE_SUPABASE_URL ?? "https://lncidgylyannquxpjnha.supabase.co"
+        process.env.VITE_SUPABASE_URL ?? "https://ofrqekoejmxorcwczojf.supabase.co"
       ),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
         process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuY2lkZ3lseWFubnF1eHBqbmhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NjMwMzUsImV4cCI6MjA5NTMzOTAzNX0.yNM-ic5XWkw7QeCxvO_5_FgMtYQmgkusGYZD47gH7Ro"
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcnFla29lam14b3Jjd2N6b2pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMTQ2NDgsImV4cCI6MjA5NTc5MDY0OH0.FGAyQshkEgvbNe6wNn8xHQbpRTwtx57UJJC_llrcR4w"
       ),
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(
-        process.env.VITE_SUPABASE_PROJECT_ID ?? "lncidgylyannquxpjnha"
+        process.env.VITE_SUPABASE_PROJECT_ID ?? "ofrqekoejmxorcwczojf"
       ),
     },
     plugins: [
